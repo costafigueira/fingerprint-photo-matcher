@@ -32,15 +32,16 @@ public class FingerprintPhotoMatcherController {
         byte[] image = Base64.getDecoder().decode(imageRequestVO.getImage());
         Mat matImage = photoService.getMatFromByteArrayImage(image);
 
+        matImage = photoService.removeBackgroundSimple(matImage);
         // matImage = photoService.removeBackground(matImage);
         matImage = photoService.convertImageToGrayScale(matImage);
-        // matImage = photoService.normalizeImage(matImage);
+        matImage = photoService.invertImage(matImage);
         matImage = photoService.applyAdaptiveHistogramEqualization(matImage);
         matImage = photoService.binarizeImage(matImage);
-        matImage = photoService.invertImage(matImage);
         // matImage = photoService.applyGaborFilter(matImage);
         // matImage = photoService.applyEdgeDetector(matImage);
         byte[] finalImage = photoService.getByteArrayImageFromMat(matImage);
+        log.info("Image processed successfully");
         return ResponseEntity.ok(Base64.getEncoder().encodeToString(finalImage));
     }
 

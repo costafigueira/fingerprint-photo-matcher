@@ -9,9 +9,8 @@ import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
-import org.opencv.core.MatOfFloat;
-import org.opencv.core.MatOfInt;
 import org.opencv.core.Point;
+import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
@@ -36,7 +35,6 @@ public class PhotoService {
 
     public byte[] getByteArrayImageFromMat(Mat image) {
         MatOfByte matOfByte = new MatOfByte();
-        // Imgcodecs.imencode(".jpg", image, matOfByte);
         Imgcodecs.imencode(".png", image, matOfByte);
         byte[] byteArray = matOfByte.toArray();
         return byteArray;
@@ -44,31 +42,35 @@ public class PhotoService {
 
     public Mat convertImageToGrayScale(Mat image) {
         log.info("Converting image to gray scale");
-        Imgproc.cvtColor(image, image, Imgproc.COLOR_RGB2GRAY);
-        return image;
+        Mat grayScaleImage = new Mat();
+        Imgproc.cvtColor(image, grayScaleImage, Imgproc.COLOR_RGB2GRAY);
+        return grayScaleImage;
     }
 
     public Mat normalizeImage(Mat image) {
         log.info("Normalizing image");
-        Core.normalize(image, image, 0, 128, Core.NORM_MINMAX);
-        return image;
+        Mat normalizedImage = new Mat();
+        Core.normalize(image, normalizedImage, 0, 128, Core.NORM_MINMAX);
+        return normalizedImage;
     }
 
     public Mat binarizeImage(Mat image) {
         log.info("Binarize image");
-        Imgproc.threshold(image, image, 128, 255, Imgproc.THRESH_BINARY);
-        return image;
+        Mat binaryImage = new Mat();
+        Imgproc.threshold(image, binaryImage, 128, 255, Imgproc.THRESH_BINARY);
+        return binaryImage;
     }
 
     public Mat invertImage(Mat image) {
         log.info("invert image");
-        Core.bitwise_not(image, image);
-        return image;
+        Mat invertImage = new Mat();
+        Core.bitwise_not(image, invertImage);
+        return invertImage;
     }
 
     public Mat applyAdaptiveHistogramEqualization(Mat image) {
         log.info("Applying Adaptive Histogram Equalization");
-        Mat claheImage = new Mat(image.height(), image.width(), CvType.CV_8UC1);
+        Mat claheImage = new Mat();
         Size tileGridSize = new Size(60, 60);
         Imgproc.createCLAHE(128, tileGridSize).apply(image, claheImage);
         return claheImage;
@@ -76,9 +78,72 @@ public class PhotoService {
 
     public Mat applyEqualization(Mat image) {
         log.info("Applying Equalization");
-        Mat equalizedImage = new Mat(image.height(), image.width(), CvType.CV_8UC1);
+        Mat equalizedImage = new Mat();
         Imgproc.equalizeHist(image, equalizedImage);
         return equalizedImage;
+    }
+
+    public Mat removeBackground(Mat image) {
+        log.info("Removing background of image");
+        Mat mask = removeBackgroundSimple(image);
+        Core.bitwise_not(mask, mask);
+        Core.inRange(mask, new Scalar(0, 0, 0), new Scalar(10, 10, 10), mask);
+        Core.bitwise_not(mask, mask);
+        return removeBackgroundFromMask(image, mask);
+    }
+
+    public Mat removeBackgroundSimple(Mat image) {
+        log.info("Removing simple background of image");
+
+        int r = image.rows();
+        int c = image.cols();
+        Point p1 = new Point(c / 100, r / 100);
+        Point p2 = new Point(c - c / 100, r - r / 100);
+        Rect rect = new Rect(p1, p2);
+        Mat mask = new Mat();
+        Mat fgdModel = new Mat();
+        Mat bgdModel = new Mat();
+
+        Imgproc.grabCut(image, mask, rect, bgdModel, fgdModel, 5, Imgproc.GC_INIT_WITH_RECT);
+
+        Mat source = new Mat(1, 1, CvType.CV_8U, new Scalar(3.0));
+        Core.compare(mask, source, mask, Core.CMP_EQ);
+
+        Mat foreground = new Mat(image.size(), CvType.CV_8UC3, new Scalar(255,
+                255, 255, 255));
+        image.copyTo(foreground, mask);
+        return foreground;
+    }
+
+    private Mat removeBackgroundFromMask(Mat image, Mat mask) {
+        log.info("Removing background from mask");
+        int r = image.rows();
+        int c = image.cols();
+        Point p1 = new Point(c / 100, r / 100);
+        Point p2 = new Point(c - c / 100, r - r / 100);
+        Rect rect = new Rect(p1, p2);
+        Mat fgdModel = new Mat();
+        Mat bgdModel = new Mat();
+
+        convertToOpencvValues(mask); // from human readable values to OpenCV values
+        Imgproc.grabCut(image, mask, rect, bgdModel, fgdModel, 5, Imgproc.GC_INIT_WITH_MASK);
+        convertToHumanValues(mask); // back to human readable values
+        Imgproc.threshold(mask, mask, 128, 255, Imgproc.THRESH_TOZERO);
+
+        Mat foreground = new Mat(image.size(), CvType.CV_8UC1, new Scalar(0, 0, 0));
+        image.copyTo(foreground, mask);
+        return foreground;
+    }
+
+    public Mat removeBackgroundAdvanced(Mat image) {
+        log.info("Removing advanced background of image");
+        Mat mask = new Mat();
+        Imgproc.threshold(image, mask, 128, 255, Imgproc.THRESH_BINARY);
+
+        Core.inRange(mask, new Scalar(0, 0, 0), new Scalar(10, 10, 10), mask);
+        Core.bitwise_not(mask, mask);
+
+        return removeBackgroundFromMask(image, mask);
     }
 
     public Mat applyGaborFilter(Mat image) {
@@ -125,7 +190,6 @@ public class PhotoService {
 
     public Mat applyEdgeDetector(Mat image) {
         log.info("Applying Canny edge detector");
-        // Imgproc.cvtColor(image, image, Imgproc.COLOR_RGB2GRAY);
         Mat detectedEdges = new Mat(image.height(), image.width(), CvType.CV_8UC1);
         Imgproc.blur(image, detectedEdges, new Size(3, 3));
         Imgproc.Canny(detectedEdges, detectedEdges, 10, 30);
@@ -135,78 +199,47 @@ public class PhotoService {
         return dest;
     }
 
-    public Mat removeBackground(Mat image) {
-        log.info("Removing background of image");
+    private void convertToHumanValues(Mat mask) {
+        byte[] buffer = new byte[3];
+        for (int x = 0; x < mask.rows(); x++) {
+            for (int y = 0; y < mask.cols(); y++) {
+                mask.get(x, y, buffer);
+                int value = buffer[0];
+                if (value == Imgproc.GC_BGD) {
+                    buffer[0] = 0; // for sure background
+                } else if (value == Imgproc.GC_PR_BGD) {
+                    buffer[0] = 85; // probably background
+                } else if (value == Imgproc.GC_PR_FGD) {
+                    buffer[0] = (byte) 170; // probably foreground
+                } else {
+                    buffer[0] = (byte) 255; // for sure foreground
 
-        Mat hsvImg = new Mat();
-        List<Mat> hsvPlanes = new ArrayList<>();
-        Mat thresholdImg = new Mat();
-
-        int thresh_type = Imgproc.THRESH_BINARY_INV;
-        // thresh_type = Imgproc.THRESH_BINARY;
-
-        // threshold the image with the average hue value
-        hsvImg.create(image.size(), CvType.CV_8U);
-        Imgproc.cvtColor(image, hsvImg, Imgproc.COLOR_BGR2HSV);
-        Core.split(hsvImg, hsvPlanes);
-
-        // get the average hue value of the image
-        double threshValue = getHistAverage(hsvImg, hsvPlanes.get(0));
-
-        Imgproc.threshold(hsvPlanes.get(0), thresholdImg, threshValue, 179.0, thresh_type);
-
-        Imgproc.blur(thresholdImg, thresholdImg, new Size(5, 5));
-
-        // dilate to fill gaps, erode to smooth edges
-        Imgproc.dilate(thresholdImg, thresholdImg, new Mat(), new Point(-1, -1), 1);
-        Imgproc.erode(thresholdImg, thresholdImg, new Mat(), new Point(-1, -1), 3);
-
-        Imgproc.threshold(thresholdImg, thresholdImg, threshValue, 179.0, Imgproc.THRESH_BINARY);
-
-        // create the new image
-        Mat foreground = new Mat(image.size(), CvType.CV_8UC3, new Scalar(255, 255, 255));
-        image.copyTo(foreground, thresholdImg);
-
-        // Rect rectangle = new Rect(0, 0, image.width(), image.height());
-        // Mat result = Mat.zeros(image.height(), image.width(), CvType.CV_8U);
-        // Mat bgdModel = Mat.zeros(1, 65, CvType.CV_64F);
-        // Mat fgdModel = Mat.zeros(1, 65, CvType.CV_64F);
-        // Mat source = new Mat(1, 1, CvType.CV_8U, new Scalar(3));
-        // Imgproc.grabCut(image, result, rectangle, bgdModel, fgdModel, 8,
-        // Imgproc.GC_INIT_WITH_MASK);
-        // Core.compare(result, source, result, Core.CMP_EQ);
-        // Mat foreground = new Mat(image.size(), CvType.CV_8UC3, new Scalar(255, 255,
-        // 255));
-        // image.copyTo(foreground, result);
-
-        return foreground;
+                }
+                mask.put(x, y, buffer);
+            }
+        }
     }
 
-    private double getHistAverage(Mat hsvImg, Mat hueValues) {
-        // init
-        double average = 0.0;
-        Mat hist_hue = new Mat();
-        // 0-180: range of Hue values
-        MatOfInt histSize = new MatOfInt(180);
-        List<Mat> hue = new ArrayList<>();
-        hue.add(hueValues);
+    private void convertToOpencvValues(Mat mask) {
+        byte[] buffer = new byte[3];
+        for (int x = 0; x < mask.rows(); x++) {
+            for (int y = 0; y < mask.cols(); y++) {
+                mask.get(x, y, buffer);
+                int value = buffer[0];
+                if (value >= 0 && value < 64) {
+                    buffer[0] = Imgproc.GC_BGD; // for sure background
+                } else if (value >= 64 && value < 128) {
+                    buffer[0] = Imgproc.GC_PR_BGD; // probably background
+                } else if (value >= 128 && value < 192) {
+                    buffer[0] = Imgproc.GC_PR_FGD; // probably foreground
+                } else {
+                    buffer[0] = Imgproc.GC_FGD; // for sure foreground
 
-        // compute the histogram
-        Imgproc.calcHist(hue, new MatOfInt(0), new Mat(), hist_hue, histSize, new MatOfFloat(0, 179));
-
-        // get the average Hue value of the image
-        // (sum(bin(h)*h))/(image-height*image-width)
-        // -----------------
-        // equivalent to get the hue of each pixel in the image, add them, and
-        // divide for the image size (height and width)
-        for (int h = 0; h < 180; h++) {
-            // for each bin, get its value and multiply it for the corresponding
-            // hue
-            average += (hist_hue.get(h, 0)[0] * h);
+                }
+                mask.put(x, y, buffer);
+            }
         }
 
-        // return the average hue of the image
-        return average = average / hsvImg.size().height / hsvImg.size().width;
     }
 
 }
