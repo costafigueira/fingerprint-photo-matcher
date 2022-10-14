@@ -3,21 +3,21 @@ package br.com.joao.fingerprintphotomatcher.rest.vo;
 import java.io.Serializable;
 
 public class ImageRequestVO implements Serializable {
-    
-    private String image;
 
-    public ImageRequestVO() {
-    }
+	private String image;
 
-    public ImageRequestVO(String image) {
-        this.image = image;
-    }
+	public ImageRequestVO() {
+	}
 
-    public String getImage() {
-        return image;
-    }
+	public ImageRequestVO(String image) {
+		this.image = image;
+	}
 
-    public void setImage(String image) {
-        this.image = image;
-    }
+	public String getImage() {
+		return image;
+	}
+
+	public void setImage(String image) {
+		this.image = image;
+	}
 }
