@@ -1,5 +1,8 @@
 package br.com.joao.fingerprintphotomatcher.service;
 
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -10,7 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import br.com.joao.fingerprintphotomatcher.rest.vo.ExtractRequestVO;
 import br.com.joao.fingerprintphotomatcher.rest.vo.ExtractResponseVO;
+import br.com.joao.fingerprintphotomatcher.rest.vo.ExtractorBiometricVO;
 import br.com.joao.fingerprintphotomatcher.rest.vo.TransactionVO;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,8 +32,14 @@ public class ExtractorService {
 	@Value("${neurotec.api.details:http://neurotec-services.hom.bry.com.br/api/content-details}")
 	private String apiContentDetails;
 
-	public ExtractResponseVO externalExtraction(TransactionVO transactionVO, boolean quality) throws Exception {
-		return requestExtraction(transactionVO, quality);
+	public ExtractResponseVO externalExtraction(ExtractRequestVO extractRequestVO) throws Exception {
+		List<ExtractorBiometricVO> biometrics = new ArrayList<>();
+
+		extractRequestVO.getBiometrics().stream().forEach(biometry -> {
+			biometrics.add(new ExtractorBiometricVO(biometry.getBodyPart(), biometry.getData(), ZonedDateTime.now()));
+		});
+		TransactionVO transactionVO = new TransactionVO(biometrics, UUID.randomUUID().toString().substring(0, 7));
+		return requestExtraction(transactionVO, extractRequestVO.isEvaluateQuality());
 	}
 
 	private ExtractResponseVO requestExtraction(TransactionVO transactionVO, boolean quality)

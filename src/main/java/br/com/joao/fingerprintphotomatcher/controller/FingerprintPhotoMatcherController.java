@@ -1,9 +1,6 @@
 package br.com.joao.fingerprintphotomatcher.controller;
 
 import java.util.Base64;
-import java.util.List;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -14,9 +11,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.com.joao.fingerprintphotomatcher.enumeration.ResultEnum;
-import br.com.joao.fingerprintphotomatcher.rest.vo.BiometricVO;
 import br.com.joao.fingerprintphotomatcher.rest.vo.ExtractRequestVO;
+import br.com.joao.fingerprintphotomatcher.rest.vo.ExtractResponseVO;
 import br.com.joao.fingerprintphotomatcher.rest.vo.ImageRequestVO;
 import br.com.joao.fingerprintphotomatcher.service.ExtractorService;
 import br.com.joao.fingerprintphotomatcher.service.MatcherService;
@@ -53,14 +49,13 @@ public class FingerprintPhotoMatcherController {
 	}
 
 	@PostMapping("/extract-template")
-	public ResponseEntity<String> extractTemplate(HttpServletRequest request,
-			@RequestBody ExtractRequestVO extractRequestVO) {
+	public ResponseEntity<ExtractResponseVO> extractTemplate(HttpServletRequest request,
+			@RequestBody ExtractRequestVO extractRequestVO) throws Exception {
 		log.info("Request to extract template received");
-		List<BiometricVO> biometrics = extractRequestVO.getBiometrics();
-		List<BiometricVO> toProcessBiometrics = biometrics.stream().filter(biometricVO -> biometricVO.isProcessImage())
-				.collect(Collectors.toList());
+		extractRequestVO.getBiometrics().forEach(photoService::processBiometric);
+		ExtractResponseVO externalExtraction = extractorService.externalExtraction(extractRequestVO);
 		log.info("Template extracted successfully");
-		return null;
+		return ResponseEntity.ok(externalExtraction);
 	}
 
 	@PostMapping("/verify")

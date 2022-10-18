@@ -7,6 +7,7 @@ import java.util.List;
 public class ExtractRequestVO implements Serializable {
 
 	private List<BiometricVO> biometrics;
+	private boolean evaluateQuality;
 
 	public ExtractRequestVO() {
 		this.biometrics = new ArrayList<>();
@@ -27,5 +28,13 @@ public class ExtractRequestVO implements Serializable {
 
 	public void addBiometric(BiometricVO biometricVO) {
 		this.biometrics.add(biometricVO);
+	}
+
+	public boolean isEvaluateQuality() {
+		return evaluateQuality;
+	}
+
+	public void setEvaluateQuality(boolean evaluateQuality) {
+		this.evaluateQuality = evaluateQuality;
 	}
 }
