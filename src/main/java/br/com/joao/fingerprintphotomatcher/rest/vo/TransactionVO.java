@@ -6,14 +6,14 @@ import java.util.List;
 
 public class TransactionVO implements Serializable {
 
-	private List<BiometricVO> biometrics;
+	private List<ExtractorBiometricVO> biometrics;
 	private String tcn;
 
 	public TransactionVO() {
 		this.biometrics = new ArrayList<>();
 	}
 
-	public TransactionVO(List<BiometricVO> biometrics, String tcn) {
+	public TransactionVO(List<ExtractorBiometricVO> biometrics, String tcn) {
 		super();
 		this.biometrics = biometrics;
 		this.tcn = tcn;
@@ -27,15 +27,15 @@ public class TransactionVO implements Serializable {
 		this.tcn = tcn;
 	}
 
-	public List<BiometricVO> getBiometrics() {
+	public List<ExtractorBiometricVO> getBiometrics() {
 		return biometrics;
 	}
 
-	public void setBiometrics(List<BiometricVO> biometrics) {
+	public void setBiometrics(List<ExtractorBiometricVO> biometrics) {
 		this.biometrics = biometrics;
 	}
 
-	public void addBiometric(BiometricVO biometricVO) {
+	public void addBiometric(ExtractorBiometricVO biometricVO) {
 		this.biometrics.add(biometricVO);
 	}
 

@@ -4,52 +4,25 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-import br.com.joao.fingerprintphotomatcher.enumeration.BodyPartEnum;
-
 public class ExtractResponseVO implements Serializable {
 
 	private byte[] template;
-	private Map<BodyPartEnum, BodyPartDetailVO> bodyParts;
+	private Map<String, Integer> quality = new HashMap<>();
+	private Map<String, byte[]> fingers = new HashMap<>();
 	private byte[] faceToken;
 	private String[] icaos;
-	private Map<String, byte[]> fingers = new HashMap<>();
 
 	public ExtractResponseVO() {
 	}
 
-	public ExtractResponseVO(byte[] template, Map<BodyPartEnum, BodyPartDetailVO> bodyParts, byte[] faceToken,
-			String[] icaos,
-			Map<String, byte[]> fingers) {
+	public ExtractResponseVO(byte[] template, Map<String, Integer> quality, byte[] faceToken,
+			String[] icaos) {
 		super();
 		this.template = template;
-		this.bodyParts = bodyParts;
+		this.quality = quality;
+		this.fingers = new HashMap<String, byte[]>();
 		this.faceToken = faceToken;
 		this.icaos = icaos;
-		this.fingers = fingers;
-	}
-
-	public byte[] getTemplate() {
-		return template;
-	}
-
-	public void setTemplate(byte[] template) {
-		this.template = template;
-	}
-
-	public Map<BodyPartEnum, BodyPartDetailVO> getBodyParts() {
-		return bodyParts;
-	}
-
-	public void setBodyParts(Map<BodyPartEnum, BodyPartDetailVO> bodyParts) {
-		this.bodyParts = bodyParts;
-	}
-
-	public byte[] getFaceToken() {
-		return faceToken;
-	}
-
-	public void setFaceToken(byte[] faceToken) {
-		this.faceToken = faceToken;
 	}
 
 	public String[] getIcaos() {
@@ -60,12 +33,39 @@ public class ExtractResponseVO implements Serializable {
 		this.icaos = icaos;
 	}
 
+	public void setTemplate(byte[] template) {
+		this.template = template;
+	}
+
+	public byte[] getTemplate() {
+		return template;
+	}
+
+	public Map<String, Integer> getQuality() {
+		return quality;
+	}
+	public void setQuality(Map<String, Integer> quality) {
+		this.quality = quality;
+	}
+
+	public byte[] getFaceToken() {
+		return faceToken;
+	}
+
+	public void setFaceToken(byte[] faceToken) {
+		this.faceToken = faceToken;
+	}
+
 	public Map<String, byte[]> getFingers() {
 		return fingers;
 	}
 
 	public void setFingers(Map<String, byte[]> fingers) {
 		this.fingers = fingers;
+	}
+
+	public void addWsqData(String bodyPart, byte[] data) {
+		this.fingers.putIfAbsent(bodyPart, data);
 	}
 
 }

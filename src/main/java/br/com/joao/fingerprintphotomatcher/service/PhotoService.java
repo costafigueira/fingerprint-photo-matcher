@@ -29,46 +29,61 @@ public class PhotoService {
         OpenCV.loadShared();
     }
 
-    public Mat getMatFromByteArrayImage(byte[] image) {
+	public byte[] processImage(byte[] image) {
+		Mat matImage = getMatFromByteArrayImage(image);
+
+        matImage = removeBackgroundSimple(matImage);
+        // matImage = removeBackground(matImage);
+        matImage = convertImageToGrayScale(matImage);
+        matImage = invertImage(matImage);
+        matImage = applyAdaptiveHistogramEqualization(matImage);
+        matImage = binarizeImage(matImage);
+        // matImage = applyGaborFilter(matImage);
+        // matImage = applyEdgeDetector(matImage);
+
+		return getByteArrayImageFromMat(matImage);
+	}
+
+    private Mat getMatFromByteArrayImage(byte[] image) {
         return Imgcodecs.imdecode(new MatOfByte(image), Imgcodecs.CV_LOAD_IMAGE_UNCHANGED);
     }
 
-    public byte[] getByteArrayImageFromMat(Mat image) {
+    private byte[] getByteArrayImageFromMat(Mat image) {
         MatOfByte matOfByte = new MatOfByte();
         Imgcodecs.imencode(".png", image, matOfByte);
         byte[] byteArray = matOfByte.toArray();
         return byteArray;
     }
 
-    public Mat convertImageToGrayScale(Mat image) {
+    private Mat convertImageToGrayScale(Mat image) {
         log.info("Converting image to gray scale");
         Mat grayScaleImage = new Mat();
         Imgproc.cvtColor(image, grayScaleImage, Imgproc.COLOR_RGB2GRAY);
         return grayScaleImage;
     }
 
-    public Mat normalizeImage(Mat image) {
+    private Mat normalizeImage(Mat image) {
         log.info("Normalizing image");
         Mat normalizedImage = new Mat();
         Core.normalize(image, normalizedImage, 0, 128, Core.NORM_MINMAX);
         return normalizedImage;
     }
 
-    public Mat binarizeImage(Mat image) {
+    private Mat binarizeImage(Mat image) {
         log.info("Binarize image");
         Mat binaryImage = new Mat();
         Imgproc.threshold(image, binaryImage, 128, 255, Imgproc.THRESH_BINARY);
         return binaryImage;
     }
 
-    public Mat invertImage(Mat image) {
+    private Mat invertImage(Mat image) {
         log.info("invert image");
         Mat invertImage = new Mat();
         Core.bitwise_not(image, invertImage);
         return invertImage;
     }
 
-    public Mat applyAdaptiveHistogramEqualization(Mat image) {
+    private Mat applyAdaptiveHistogramEqualization(Mat image) {
         log.info("Applying Adaptive Histogram Equalization");
         Mat claheImage = new Mat();
         Size tileGridSize = new Size(60, 60);
@@ -76,14 +91,14 @@ public class PhotoService {
         return claheImage;
     }
 
-    public Mat applyEqualization(Mat image) {
+    private Mat applyEqualization(Mat image) {
         log.info("Applying Equalization");
         Mat equalizedImage = new Mat();
         Imgproc.equalizeHist(image, equalizedImage);
         return equalizedImage;
     }
 
-    public Mat removeBackground(Mat image) {
+    private Mat removeBackground(Mat image) {
         log.info("Removing background of image");
         Mat mask = removeBackgroundSimple(image);
         Core.bitwise_not(mask, mask);
@@ -92,7 +107,7 @@ public class PhotoService {
         return removeBackgroundFromMask(image, mask);
     }
 
-    public Mat removeBackgroundSimple(Mat image) {
+    private Mat removeBackgroundSimple(Mat image) {
         log.info("Removing simple background of image");
 
         int r = image.rows();
@@ -135,7 +150,7 @@ public class PhotoService {
         return foreground;
     }
 
-    public Mat removeBackgroundAdvanced(Mat image) {
+    private Mat removeBackgroundAdvanced(Mat image) {
         log.info("Removing advanced background of image");
         Mat mask = new Mat();
         Imgproc.threshold(image, mask, 128, 255, Imgproc.THRESH_BINARY);
@@ -146,7 +161,7 @@ public class PhotoService {
         return removeBackgroundFromMask(image, mask);
     }
 
-    public Mat applyGaborFilter(Mat image) {
+    private Mat applyGaborFilter(Mat image) {
         log.info("Applying Gabor filter");
         image.convertTo(image, CvType.CV_32F);
 
@@ -188,7 +203,7 @@ public class PhotoService {
         return enhanced;
     }
 
-    public Mat applyEdgeDetector(Mat image) {
+    private Mat applyEdgeDetector(Mat image) {
         log.info("Applying Canny edge detector");
         Mat detectedEdges = new Mat(image.height(), image.width(), CvType.CV_8UC1);
         Imgproc.blur(image, detectedEdges, new Size(3, 3));

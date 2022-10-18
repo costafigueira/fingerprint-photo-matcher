@@ -1,23 +1,24 @@
 package br.com.joao.fingerprintphotomatcher.rest.vo;
 
 import java.io.Serializable;
+import java.time.ZonedDateTime;
 
 import br.com.joao.fingerprintphotomatcher.enumeration.BodyPartEnum;
 
-public class BiometricVO implements Serializable {
+public class ExtractorBiometricVO implements Serializable {
 
 	private BodyPartEnum bodyPart;
 	private String data;
-	private boolean processImage;
+	private ZonedDateTime captureDate;
 
-	public BiometricVO() {
+	public ExtractorBiometricVO() {
 	}
 
-	public BiometricVO(BodyPartEnum bodyPart, String data, boolean processImage) {
+	public ExtractorBiometricVO(BodyPartEnum bodyPart, String data, ZonedDateTime captureDate) {
 		super();
 		this.bodyPart = bodyPart;
 		this.data = data;
-		this.processImage = processImage;
+		this.captureDate = captureDate;
 	}
 
 	public BodyPartEnum getBodyPart() {
@@ -40,12 +41,12 @@ public class BiometricVO implements Serializable {
 		return bodyPart == BodyPartEnum.FACE;
 	}
 
-	public boolean isProcessImage() {
-		return processImage;
+	public ZonedDateTime getCaptureDate() {
+		return captureDate;
 	}
 
-	public void setProcessImage(boolean processImage) {
-		this.processImage = processImage;
+	public void setCapturaDate(ZonedDateTime captureDate) {
+		this.captureDate = captureDate;
 	}
 
 }
