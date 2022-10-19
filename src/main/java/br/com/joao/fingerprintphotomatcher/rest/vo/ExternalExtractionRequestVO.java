@@ -13,6 +13,10 @@ public class ExternalExtractionRequestVO implements Serializable {
 		this.biometrics = new ArrayList<>();
 	}
 
+	public ExternalExtractionRequestVO(List<ExtractorBiometricVO> biometrics) {
+		this.biometrics = biometrics;
+	}
+
 	public ExternalExtractionRequestVO(List<ExtractorBiometricVO> biometrics, String tcn) {
 		super();
 		this.biometrics = biometrics;

@@ -1,7 +1,6 @@
 package br.com.joao.fingerprintphotomatcher.rest.vo;
 
 import java.io.Serializable;
-import java.time.ZonedDateTime;
 
 import br.com.joao.fingerprintphotomatcher.enumeration.BodyPartEnum;
 
@@ -9,16 +8,14 @@ public class ExtractorBiometricVO implements Serializable {
 
 	private BodyPartEnum bodyPart;
 	private String data;
-	private ZonedDateTime captureDate;
 
 	public ExtractorBiometricVO() {
 	}
 
-	public ExtractorBiometricVO(BodyPartEnum bodyPart, String data, ZonedDateTime captureDate) {
+	public ExtractorBiometricVO(BodyPartEnum bodyPart, String data) {
 		super();
 		this.bodyPart = bodyPart;
 		this.data = data;
-		this.captureDate = captureDate;
 	}
 
 	public BodyPartEnum getBodyPart() {
@@ -39,14 +36,6 @@ public class ExtractorBiometricVO implements Serializable {
 
 	public boolean isFace() {
 		return bodyPart == BodyPartEnum.FACE;
-	}
-
-	public ZonedDateTime getCaptureDate() {
-		return captureDate;
-	}
-
-	public void setCapturaDate(ZonedDateTime captureDate) {
-		this.captureDate = captureDate;
 	}
 
 }
