@@ -16,6 +16,13 @@ public class ExtractRequestVO implements Serializable {
 	public ExtractRequestVO(List<BiometricVO> biometrics) {
 		super();
 		this.biometrics = biometrics;
+		this.evaluateQuality = true;
+	}
+
+	public ExtractRequestVO(List<BiometricVO> biometrics, boolean evaluateQuality) {
+		super();
+		this.biometrics = biometrics;
+		this.evaluateQuality = evaluateQuality;
 	}
 
 	public List<BiometricVO> getBiometrics() {

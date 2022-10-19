@@ -16,7 +16,7 @@ import org.springframework.web.client.RestTemplate;
 import br.com.joao.fingerprintphotomatcher.rest.vo.ExtractRequestVO;
 import br.com.joao.fingerprintphotomatcher.rest.vo.ExtractResponseVO;
 import br.com.joao.fingerprintphotomatcher.rest.vo.ExtractorBiometricVO;
-import br.com.joao.fingerprintphotomatcher.rest.vo.TransactionVO;
+import br.com.joao.fingerprintphotomatcher.rest.vo.ExternalExtractionRequestVO;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -38,11 +38,11 @@ public class ExtractorService {
 		extractRequestVO.getBiometrics().stream().forEach(biometry -> {
 			biometrics.add(new ExtractorBiometricVO(biometry.getBodyPart(), biometry.getData(), ZonedDateTime.now()));
 		});
-		TransactionVO transactionVO = new TransactionVO(biometrics, UUID.randomUUID().toString().substring(0, 7));
-		return requestExtraction(transactionVO, extractRequestVO.isEvaluateQuality());
+		ExternalExtractionRequestVO externalExtractionRequestVO = new ExternalExtractionRequestVO(biometrics, UUID.randomUUID().toString().substring(0, 7));
+		return requestExtraction(externalExtractionRequestVO, extractRequestVO.isEvaluateQuality());
 	}
 
-	private ExtractResponseVO requestExtraction(TransactionVO transactionVO, boolean quality)
+	private ExtractResponseVO requestExtraction(ExternalExtractionRequestVO externalExtractionRequestVO, boolean quality)
 			throws Exception {
 		try {
 			RestTemplate restTemplate = new RestTemplate();
@@ -51,7 +51,7 @@ public class ExtractorService {
 			String ctxId = UUID.randomUUID().toString().substring(0, 7);
 			headers.set("ctxId", ctxId);
 			headers.set("quality", String.valueOf(quality));
-			HttpEntity<TransactionVO> request = new HttpEntity<>(transactionVO, headers);
+			HttpEntity<ExternalExtractionRequestVO> request = new HttpEntity<>(externalExtractionRequestVO, headers);
 			ResponseEntity<ExtractResponseVO> response = restTemplate.exchange(apiExtraction,
 					HttpMethod.POST, request, ExtractResponseVO.class);
 			// ExtractResponseVO extractTemplate = objectMapper.readValue(response.getBody(), ExtractResponseVO.class);

@@ -4,16 +4,16 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TransactionVO implements Serializable {
+public class ExternalExtractionRequestVO implements Serializable {
 
 	private List<ExtractorBiometricVO> biometrics;
 	private String tcn;
 
-	public TransactionVO() {
+	public ExternalExtractionRequestVO() {
 		this.biometrics = new ArrayList<>();
 	}
 
-	public TransactionVO(List<ExtractorBiometricVO> biometrics, String tcn) {
+	public ExternalExtractionRequestVO(List<ExtractorBiometricVO> biometrics, String tcn) {
 		super();
 		this.biometrics = biometrics;
 		this.tcn = tcn;

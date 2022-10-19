@@ -4,26 +4,30 @@ import java.io.Serializable;
 
 public class MatchRequestVO implements Serializable {
 
-	private byte[] template1;
-	private byte[] template2;
+	private ExtractRequestVO template1;
+	private ExtractRequestVO template2;
 
 	public MatchRequestVO() {
-		super();
 	}
 
-	public byte[] getTemplate1() {
+	public MatchRequestVO(ExtractRequestVO template1, ExtractRequestVO template2) {
+		this.template1 = template1;
+		this.template2 = template2;
+	}
+
+	public ExtractRequestVO getTemplate1() {
 		return template1;
 	}
 
-	public void setTemplate1(byte[] template1) {
+	public void setTemplate1(ExtractRequestVO template1) {
 		this.template1 = template1;
 	}
 
-	public byte[] getTemplate2() {
+	public ExtractRequestVO getTemplate2() {
 		return template2;
 	}
 
-	public void setTemplate2(byte[] template2) {
+	public void setTemplate2(ExtractRequestVO template2) {
 		this.template2 = template2;
 	}
 

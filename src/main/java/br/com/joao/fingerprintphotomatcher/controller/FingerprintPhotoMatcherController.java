@@ -14,6 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 import br.com.joao.fingerprintphotomatcher.rest.vo.ExtractRequestVO;
 import br.com.joao.fingerprintphotomatcher.rest.vo.ExtractResponseVO;
 import br.com.joao.fingerprintphotomatcher.rest.vo.ImageRequestVO;
+import br.com.joao.fingerprintphotomatcher.rest.vo.MatchRequestVO;
+import br.com.joao.fingerprintphotomatcher.rest.vo.ExternalMatchRequestVO;
+import br.com.joao.fingerprintphotomatcher.rest.vo.MatchResponseVO;
 import br.com.joao.fingerprintphotomatcher.service.ExtractorService;
 import br.com.joao.fingerprintphotomatcher.service.MatcherService;
 import br.com.joao.fingerprintphotomatcher.service.PhotoService;
@@ -23,9 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/api")
 @Slf4j
 public class FingerprintPhotoMatcherController {
-
-	// private static final Predicate<BiometricVO> TO_PROCESS_IMAGES = biometricVO
-	// -> biometricVO.isProcessImage();
 
 	@Autowired
 	private PhotoService photoService;
@@ -59,19 +59,25 @@ public class FingerprintPhotoMatcherController {
 	}
 
 	@PostMapping("/verify")
-	public ResponseEntity<String> verify(HttpServletRequest request,
-			@RequestBody ImageRequestVO imageRequestVO) {
+	public ResponseEntity<MatchResponseVO> verify(HttpServletRequest request,
+			@RequestBody MatchRequestVO matchRequestVO) throws Exception {
 		log.info("Request to verify two images received");
+		matchRequestVO.getTemplate1().getBiometrics().forEach(photoService::processBiometric);
+		matchRequestVO.getTemplate2().getBiometrics().forEach(photoService::processBiometric);
+		ExtractResponseVO template1Extraction = extractorService.externalExtraction(matchRequestVO.getTemplate1());
+		ExtractResponseVO template2Extraction = extractorService.externalExtraction(matchRequestVO.getTemplate2());
+		MatchResponseVO match = matcherService.verifyPhotos(template1Extraction, template2Extraction);
 		log.info("Verify successfully executed");
-		return null;
+		return ResponseEntity.ok(match);
 	}
 
 	@PostMapping("/verify-templates")
-	public ResponseEntity<String> verifyTemplates(HttpServletRequest request,
-			@RequestBody ImageRequestVO imageRequestVO) {
+	public ResponseEntity<MatchResponseVO> verifyTemplates(HttpServletRequest request,
+			@RequestBody ExternalMatchRequestVO externalMatchRequestVO) throws Exception {
 		log.info("Request to verify two templates received");
+		MatchResponseVO match = matcherService.verifyTemplates(externalMatchRequestVO);
 		log.info("Verify successfully executed");
-		return null;
+		return ResponseEntity.ok(match);
 	}
 
 }
