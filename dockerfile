@@ -12,4 +12,4 @@ COPY --from=build /workspace/target/*.jar /home/service/service.jar
 COPY --from=build /workspace/target /home/service/temp
 # ARG JVM_OPTS_ARG=-Xmx256m
 # ENV JVM_OPTS=$JVM_OPTS_ARG
-ENTRYPOINT exec java $JVM_OPTS -jar /home/service/service.jar
+ENTRYPOINT exec java -jar /home/service/service.jar
