@@ -11,11 +11,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import br.com.joao.fingerprintphotomatcher.rest.vo.ExternalMatchRequestVO;
 import br.com.joao.fingerprintphotomatcher.rest.vo.ExtractRequestVO;
 import br.com.joao.fingerprintphotomatcher.rest.vo.ExtractResponseVO;
 import br.com.joao.fingerprintphotomatcher.rest.vo.ImageRequestVO;
 import br.com.joao.fingerprintphotomatcher.rest.vo.MatchRequestVO;
-import br.com.joao.fingerprintphotomatcher.rest.vo.ExternalMatchRequestVO;
 import br.com.joao.fingerprintphotomatcher.rest.vo.MatchResponseVO;
 import br.com.joao.fingerprintphotomatcher.service.ExtractorService;
 import br.com.joao.fingerprintphotomatcher.service.MatcherService;

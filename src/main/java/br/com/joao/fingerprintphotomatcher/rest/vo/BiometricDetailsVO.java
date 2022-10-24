@@ -1,8 +1,6 @@
 package br.com.joao.fingerprintphotomatcher.rest.vo;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -17,13 +15,11 @@ import lombok.ToString;
 @Setter
 @ToString
 @EqualsAndHashCode
-public class ExtractResponseVO implements Serializable {
+public class BiometricDetailsVO implements Serializable {
 
-	private byte[] template;
-	private List<BiometricDetailsVO> biometrics = new ArrayList<>();
-
-	public ExtractResponseVO(byte[] template) {
-		this.template = template;
-	}
+	private String bodyPart;
+	private String data;
+	private Integer nfiq;
+	// private Integer minutiae;
 
 }

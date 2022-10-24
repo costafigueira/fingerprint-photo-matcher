@@ -1,6 +1,7 @@
 package br.com.joao.fingerprintphotomatcher.service;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 
@@ -11,9 +12,12 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import br.com.joao.fingerprintphotomatcher.rest.vo.BiometricDetailsVO;
+import br.com.joao.fingerprintphotomatcher.rest.vo.ExternalExtractResponseVO;
 import br.com.joao.fingerprintphotomatcher.rest.vo.ExternalExtractionRequestVO;
 import br.com.joao.fingerprintphotomatcher.rest.vo.ExtractRequestVO;
 import br.com.joao.fingerprintphotomatcher.rest.vo.ExtractResponseVO;
@@ -33,6 +37,9 @@ public class ExtractorService {
 	@Value("${neurotec.api.details:http://neurotec-services.hom.bry.com.br/api/content-details}")
 	private String apiContentDetails;
 
+	private static RestTemplate restTemplate = new RestTemplate();
+	private static ObjectMapper objectMapper = new ObjectMapper();
+
 	public ExtractResponseVO externalExtraction(ExtractRequestVO extractRequestVO) throws Exception {
 		List<ExtractorBiometricVO> biometrics = new ArrayList<>();
 
@@ -40,14 +47,17 @@ public class ExtractorService {
 			biometrics.add(new ExtractorBiometricVO(biometry.getBodyPart(), biometry.getData()));
 		});
 		ExternalExtractionRequestVO externalExtractionRequestVO = new ExternalExtractionRequestVO(biometrics);
-		return requestExtraction(externalExtractionRequestVO, extractRequestVO.isEvaluateQuality());
+		ExternalExtractResponseVO requestExtraction = requestExtraction(externalExtractionRequestVO,
+				extractRequestVO.isEvaluateQuality());
+		return convertExternalExtractionResponseToExtractionResponse(requestExtraction);
 	}
 
-	private ExtractResponseVO requestExtraction(ExternalExtractionRequestVO externalExtractionRequestVO, boolean quality)
+	private ExternalExtractResponseVO requestExtraction(ExternalExtractionRequestVO externalExtractionRequestVO,
+			boolean quality)
 			throws Exception {
 		try {
-			RestTemplate restTemplate = new RestTemplate();
-            ObjectMapper objectMapper = new ObjectMapper();
+			// RestTemplate restTemplate = new RestTemplate();
+			// ObjectMapper objectMapper = new ObjectMapper();
 			HttpHeaders headers = new HttpHeaders();
 			String ctxId = UUID.randomUUID().toString().substring(0, 7);
 			headers.set("ctxId", ctxId);
@@ -55,19 +65,51 @@ public class ExtractorService {
 			HttpEntity<ExternalExtractionRequestVO> request = new HttpEntity<>(externalExtractionRequestVO, headers);
 			ResponseEntity<byte[]> response = restTemplate.exchange(apiExtraction,
 					HttpMethod.POST, request, byte[].class);
-			ExtractResponseVO extractTemplate = objectMapper.readValue(response.getBody(), ExtractResponseVO.class);
-
-			// bodyPartDetails.forEach((k, v) -> templateQuality.forEach((bodyPart, quality) -> {
-			// 	if (k.toString().equals(bodyPart)) {
-			// 		v.setQuality(quality);
-			// 	}
-			// }));
+			ExternalExtractResponseVO extractTemplate = objectMapper.readValue(response.getBody(),
+					ExternalExtractResponseVO.class);
 			return extractTemplate;
 		} catch (Exception e) {
-            log.error("Error consuming template extractor service > url: {} | message: {}",
-                    apiExtraction, e.getMessage(), e);
-            throw e;
-        }
+			log.error("Error consuming template extractor service > url: {} | message: {}",
+					apiExtraction, e.getMessage(), e);
+			throw e;
+		}
+	}
 
+	private ExtractResponseVO convertExternalExtractionResponseToExtractionResponse(
+			ExternalExtractResponseVO externalExtraction) {
+		ExtractResponseVO extractResponseVO = new ExtractResponseVO(externalExtraction.getTemplate());
+		externalExtraction.getFingers()
+				.forEach((bodyPartName, data) -> externalExtraction.getQuality()
+						.forEach((bodyPart, quality) -> {
+							if (bodyPartName.toString().equals(bodyPart)) {
+								List<BiometricDetailsVO> biometricDetailsVOs = new ArrayList<>();
+								biometricDetailsVOs.add(new BiometricDetailsVO(bodyPartName,
+										Base64.getEncoder().encodeToString(data), quality));
+								extractResponseVO.setBiometrics(biometricDetailsVOs);
+							}
+						}));
+		return extractResponseVO;
+	}
+
+	public byte[] requestImageConversion(byte[] image, Boolean convertToPng, Boolean detail, Boolean showMinutiae,
+			String imageFormat) throws Exception {
+		// RestTemplate restTemplate = new RestTemplate();
+		String ctxId = UUID.randomUUID().toString().substring(0, 7);
+		HttpHeaders headers = new HttpHeaders();
+		UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(apiConversion)
+				.queryParam("convertToPng", convertToPng).queryParam("detail", detail)
+				.queryParam("showMinutiae", showMinutiae)
+				.queryParam("contentType", imageFormat);
+		try {
+			headers.set("ctxId", ctxId);
+			HttpEntity<byte[]> request = new HttpEntity<>(image, headers);
+			ResponseEntity<byte[]> response = restTemplate.exchange(builder.toUriString(), HttpMethod.POST, request,
+					byte[].class);
+			return response.getBody();
+		} catch (Exception e) {
+			log.error("Error consuming template extractor service > url: {} | message: {}",
+					apiExtraction, e.getMessage(), e);
+			throw e;
+		}
 	}
 }

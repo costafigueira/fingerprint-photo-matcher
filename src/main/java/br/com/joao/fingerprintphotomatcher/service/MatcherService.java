@@ -24,6 +24,9 @@ public class MatcherService {
 	@Value("${neurotec.api.verify:http://neurotec-services.hom.bry.com.br/api/verify}")
 	private String apiVerify;
 
+	private static RestTemplate restTemplate = new RestTemplate();
+	private static ObjectMapper objectMapper = new ObjectMapper();
+
 	public MatchResponseVO verifyPhotos(ExtractResponseVO template1Extraction, ExtractResponseVO template2Extraction)
 			throws Exception {
 		ExternalMatchRequestVO externalMatchRequestVO = new ExternalMatchRequestVO(template1Extraction.getTemplate(),
@@ -34,8 +37,6 @@ public class MatcherService {
 	public MatchResponseVO verifyTemplates(ExternalMatchRequestVO externalMatchRequestVO) throws Exception {
 		log.info("Request to perform a verify in neurotec service");
 		try {
-			RestTemplate restTemplate = new RestTemplate();
-			ObjectMapper objectMapper = new ObjectMapper();
 			HttpHeaders headers = new HttpHeaders();
 			String ctxId = UUID.randomUUID().toString().substring(0, 7);
 			headers.set("ctxId", ctxId);

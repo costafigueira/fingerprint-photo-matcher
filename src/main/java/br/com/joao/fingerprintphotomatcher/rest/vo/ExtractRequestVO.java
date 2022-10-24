@@ -1,17 +1,25 @@
 package br.com.joao.fingerprintphotomatcher.rest.vo;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
+@ToString
+@EqualsAndHashCode
 public class ExtractRequestVO implements Serializable {
 
 	private List<BiometricVO> biometrics;
 	private boolean evaluateQuality;
-
-	public ExtractRequestVO() {
-		this.biometrics = new ArrayList<>();
-	}
 
 	public ExtractRequestVO(List<BiometricVO> biometrics) {
 		super();
@@ -19,29 +27,7 @@ public class ExtractRequestVO implements Serializable {
 		this.evaluateQuality = true;
 	}
 
-	public ExtractRequestVO(List<BiometricVO> biometrics, boolean evaluateQuality) {
-		super();
-		this.biometrics = biometrics;
-		this.evaluateQuality = evaluateQuality;
-	}
-
-	public List<BiometricVO> getBiometrics() {
-		return biometrics;
-	}
-
-	public void setBiometrics(List<BiometricVO> biometrics) {
-		this.biometrics = biometrics;
-	}
-
 	public void addBiometric(BiometricVO biometricVO) {
 		this.biometrics.add(biometricVO);
-	}
-
-	public boolean isEvaluateQuality() {
-		return evaluateQuality;
-	}
-
-	public void setEvaluateQuality(boolean evaluateQuality) {
-		this.evaluateQuality = evaluateQuality;
 	}
 }
