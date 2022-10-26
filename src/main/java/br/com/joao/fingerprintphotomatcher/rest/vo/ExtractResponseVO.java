@@ -19,8 +19,8 @@ import lombok.ToString;
 @EqualsAndHashCode
 public class ExtractResponseVO implements Serializable {
 
-	private byte[] template;
 	private List<BiometricDetailsVO> biometrics = new ArrayList<>();
+	private byte[] template;
 
 	public ExtractResponseVO(byte[] template) {
 		this.template = template;

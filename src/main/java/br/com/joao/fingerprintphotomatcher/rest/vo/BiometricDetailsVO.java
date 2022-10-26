@@ -18,8 +18,8 @@ import lombok.ToString;
 public class BiometricDetailsVO implements Serializable {
 
 	private String bodyPart;
-	private String data;
 	private Integer nfiq;
+	private String data;
 	// private Integer minutiae;
 
 }

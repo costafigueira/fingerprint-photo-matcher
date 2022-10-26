@@ -20,16 +20,16 @@ import lombok.ToString;
 @EqualsAndHashCode
 public class MatchResponseVO implements Serializable {
 
-	private String uuid;
-
-	private ZonedDateTime datetime;
-
-	private String description;
-
 	private OperationEnum operation;
 
 	private ResultEnum result;
 
 	private Integer score;
+
+	private String uuid;
+
+	private String description;
+
+	private ZonedDateTime datetime;
 
 }

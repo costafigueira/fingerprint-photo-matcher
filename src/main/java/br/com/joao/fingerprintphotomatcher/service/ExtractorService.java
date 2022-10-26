@@ -56,8 +56,6 @@ public class ExtractorService {
 			boolean quality)
 			throws Exception {
 		try {
-			// RestTemplate restTemplate = new RestTemplate();
-			// ObjectMapper objectMapper = new ObjectMapper();
 			HttpHeaders headers = new HttpHeaders();
 			String ctxId = UUID.randomUUID().toString().substring(0, 7);
 			headers.set("ctxId", ctxId);
@@ -84,7 +82,7 @@ public class ExtractorService {
 							if (bodyPartName.toString().equals(bodyPart)) {
 								List<BiometricDetailsVO> biometricDetailsVOs = new ArrayList<>();
 								biometricDetailsVOs.add(new BiometricDetailsVO(bodyPartName,
-										Base64.getEncoder().encodeToString(data), quality));
+										quality, Base64.getEncoder().encodeToString(data)));
 								extractResponseVO.setBiometrics(biometricDetailsVOs);
 							}
 						}));
@@ -93,7 +91,6 @@ public class ExtractorService {
 
 	public byte[] requestImageConversion(byte[] image, Boolean convertToPng, Boolean detail, Boolean showMinutiae,
 			String imageFormat) throws Exception {
-		// RestTemplate restTemplate = new RestTemplate();
 		String ctxId = UUID.randomUUID().toString().substring(0, 7);
 		HttpHeaders headers = new HttpHeaders();
 		UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(apiConversion)
@@ -107,7 +104,7 @@ public class ExtractorService {
 					byte[].class);
 			return response.getBody();
 		} catch (Exception e) {
-			log.error("Error consuming template extractor service > url: {} | message: {}",
+			log.error("Error consuming image conversion service > url: {} | message: {}",
 					apiExtraction, e.getMessage(), e);
 			throw e;
 		}
