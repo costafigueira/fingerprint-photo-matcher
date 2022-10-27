@@ -70,10 +70,21 @@ class FingerprintPhotoMatcherApplicationTests {
 	private MatcherService matcherService;
 
 	@Test
-	void processImages() {
-		// Get all images on /test/resources/images/ process it then put the result in
-		// /test/target/processed/images/ on 2 files: 1 .png and 1 .json containing
-		// Base64, NFIQ and number of minutiae
+	void executeTests() {
+		log.info("Tests started");
+		processImages();
+		processWsqs();
+		verifyImagesWithWsqs();
+		verifyImagesWithImages();
+		verifyWsqsWithWsqs();
+		log.info("Tests finished successfully!");
+	}
+
+	// Get all images on /test/resources/images/ process it then put the result in
+	// /test/target/processed/images/ on 2 files: 1 .png and 1 .json containing
+	// Base64, NFIQ and number of minutiae
+	private void processImages() {
+		log.info("Init process images test");
 		File imagesDirectory = new File(RESOURCES_IMAGES_PATH);
 		if (imagesDirectory.isDirectory()) {
 			for (File image : imagesDirectory.listFiles()) {
@@ -99,10 +110,10 @@ class FingerprintPhotoMatcherApplicationTests {
 
 					// Get image with minutiaes and write it to a .png with same name format
 					byte[] imageWithMinutiae = extractorService.requestImageConversion(
-							externalExtraction.getBiometrics().get(0).getData().getBytes(), true, true, true, json);
+							externalExtraction.getBiometrics().get(0).getData(),
+							true, true, true, null);
 					File minutiaeFile = new File(
-							PROCESSED_IMAGES_PATH + File.separator + split[0] + "_Minutiae"
-									+ split[1]);
+							PROCESSED_IMAGES_PATH + File.separator + split[0] + "_Minutiae.png");
 					FileUtils.writeByteArrayToFile(minutiaeFile, imageWithMinutiae);
 				} catch (IOException e) {
 					log.error("Can not read or write image {} from {} - {}", image, imagesDirectory, e.getMessage());
@@ -114,11 +125,11 @@ class FingerprintPhotoMatcherApplicationTests {
 		}
 	}
 
-	@Test
-	void processWsqs() {
-		// Get all wsqs on /test/resources/wsqs/ process it then put the result in
-		// /test/target/processed/images/ on 2 files: 1 .png/.wsq and 1 .json containing
-		// Base64, NFIQ and number of minutiae
+	// Get all wsqs on /test/resources/wsqs/ process it then put the result in
+	// /test/target/processed/images/ on 2 files: 1 .png/.wsq and 1 .json containing
+	// Base64, NFIQ and number of minutiae
+	private void processWsqs() {
+		log.info("Init process wsqs test");
 		File wsqsDirectory = new File(RESOURCES_WSQS_PATH);
 		if (wsqsDirectory.isDirectory()) {
 			for (File wsq : wsqsDirectory.listFiles()) {
@@ -140,10 +151,10 @@ class FingerprintPhotoMatcherApplicationTests {
 
 					// Get image with minutiaes and write it to a .png with same name format
 					byte[] wsqWithMinutiae = extractorService.requestImageConversion(
-							externalExtraction.getBiometrics().get(0).getData().getBytes(), true, true, true, json);
+							externalExtraction.getBiometrics().get(0).getData(),
+							true, true, true, null);
 					File minutiaeFile = new File(
-							PROCESSED_WSQS_PATH + File.separator + split[0] + "_Minutiae"
-									+ split[1]);
+							PROCESSED_WSQS_PATH + File.separator + split[0] + "_Minutiae.png");
 					FileUtils.writeByteArrayToFile(minutiaeFile, wsqWithMinutiae);
 				} catch (IOException e) {
 					log.error("Can not read or write image {} from {} - {}", wsq, wsqsDirectory, e.getMessage());
@@ -155,30 +166,30 @@ class FingerprintPhotoMatcherApplicationTests {
 		}
 	}
 
-	@Test
-	void verifyImagesWithWsqs() {
-		// Get all images on /test/target/processed/images/ and match it with all WSQs
-		// on /test/target/processed/wsqs/ then put the result in
-		// /test/target/result/image-wsq/ on a .json containing score and match result
+	// Get all images on /test/target/processed/images/ and match it with all WSQs
+	// on /test/target/processed/wsqs/ then put the result in
+	// /test/target/result/image-wsq/ on a .json containing score and match result
+	private void verifyImagesWithWsqs() {
+		log.info("Init verify images-wsqs test");
 		Map<String, byte[]> imagesTemplates = getTemplates(PROCESSED_IMAGES_PATH);
 		Map<String, byte[]> wsqsTemplates = getTemplates(PROCESSED_WSQS_PATH);
 		verifyTemplates(imagesTemplates, wsqsTemplates, VERIFY_IMAGE_WSQ_PATH);
 	}
 
-	@Test
-	void verifyImagesWithImages() {
-		// Get all images on /test/target/processed/images/ and match it with all images
-		// on /test/target/processed/images/ then put the result in
-		// /test/target/result/image-image/ on a .json containing score and match result
+	// Get all images on /test/target/processed/images/ and match it with all images
+	// on /test/target/processed/images/ then put the result in
+	// /test/target/result/image-image/ on a .json containing score and match result
+	private void verifyImagesWithImages() {
+		log.info("Init verify images-images test");
 		Map<String, byte[]> imagesTemplates = getTemplates(PROCESSED_IMAGES_PATH);
 		verifyTemplates(imagesTemplates, imagesTemplates, VERIFY_IMAGE_IMAGE_PATH);
 	}
 
-	@Test
-	void verifyWsqsWithWsqs() {
-		// Get all WSQs on /test/target/processed/wsqs/ and match it with all WSQs
-		// on /test/target/processed/wsqs/ then put the result in
-		// /test/target/result/wsq-wsq/ on a .json containing score and match result
+	// Get all WSQs on /test/target/processed/wsqs/ and match it with all WSQs
+	// on /test/target/processed/wsqs/ then put the result in
+	// /test/target/result/wsq-wsq/ on a .json containing score and match result
+	private void verifyWsqsWithWsqs() {
+		log.info("Init verify wsqs-wsqs test");
 		Map<String, byte[]> wsqsTemplates = getTemplates(PROCESSED_WSQS_PATH);
 		verifyTemplates(wsqsTemplates, wsqsTemplates, VERIFY_WSQ_WSQ_PATH);
 	}

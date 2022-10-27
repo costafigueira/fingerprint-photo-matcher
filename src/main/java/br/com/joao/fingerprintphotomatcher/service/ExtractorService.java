@@ -1,7 +1,6 @@
 package br.com.joao.fingerprintphotomatcher.service;
 
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 
@@ -82,7 +81,7 @@ public class ExtractorService {
 							if (bodyPartName.toString().equals(bodyPart)) {
 								List<BiometricDetailsVO> biometricDetailsVOs = new ArrayList<>();
 								biometricDetailsVOs.add(new BiometricDetailsVO(bodyPartName,
-										quality, Base64.getEncoder().encodeToString(data)));
+										quality, data));
 								extractResponseVO.setBiometrics(biometricDetailsVOs);
 							}
 						}));
@@ -105,7 +104,7 @@ public class ExtractorService {
 			return response.getBody();
 		} catch (Exception e) {
 			log.error("Error consuming image conversion service > url: {} | message: {}",
-					apiExtraction, e.getMessage(), e);
+					apiConversion, e.getMessage(), e);
 			throw e;
 		}
 	}

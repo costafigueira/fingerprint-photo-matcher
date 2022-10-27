@@ -19,7 +19,7 @@ public class BiometricDetailsVO implements Serializable {
 
 	private String bodyPart;
 	private Integer nfiq;
-	private String data;
+	private byte[] data;
 	// private Integer minutiae;
 
 }
