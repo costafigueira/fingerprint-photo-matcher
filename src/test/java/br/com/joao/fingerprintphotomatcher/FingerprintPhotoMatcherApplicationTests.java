@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
@@ -49,6 +51,12 @@ class FingerprintPhotoMatcherApplicationTests {
 	private static final String PROCESSED_WSQS_PATH = TARGET_PROCESSED_PATH + File.separator + "wsqs";
 
 	private static final String RESULT_PATH = TARGET_PATH + File.separator + "result";
+
+	private static final String VERIFY_IMAGE_IMAGE_PATH = RESULT_PATH + File.separator + "image-image";
+
+	private static final String VERIFY_IMAGE_WSQ_PATH = RESULT_PATH + File.separator + "image-wsq";
+
+	private static final String VERIFY_WSQ_WSQ_PATH = RESULT_PATH + File.separator + "wsq-wsq";
 
 	private static ObjectMapper objectMapper = new ObjectMapper();
 
@@ -152,25 +160,9 @@ class FingerprintPhotoMatcherApplicationTests {
 		// Get all images on /test/target/processed/images/ and match it with all WSQs
 		// on /test/target/processed/wsqs/ then put the result in
 		// /test/target/result/image-wsq/ on a .json containing score and match result
-		try {
-			List<byte[]> imagesTemplates = getTemplates(PROCESSED_IMAGES_PATH);
-			List<byte[]> wsqsTemplates = getTemplates(PROCESSED_WSQS_PATH);
-			for (byte[] imageTemplate : imagesTemplates) {
-				for (byte[] wsqTemplate : wsqsTemplates) {
-					ExternalMatchRequestVO externalMatchRequestVO = new ExternalMatchRequestVO(imageTemplate,
-							wsqTemplate);
-					MatchResponseVO match = matcherService.verifyTemplates(externalMatchRequestVO);
-
-					String json = objectMapper.writeValueAsString(match);
-					// File jsonFile = new File(
-					// 		RESULT_PATH + File.separator + split[0] + ".json");
-					// FileUtils.writeStringToFile(jsonFile, json, StandardCharsets.UTF_8);
-				}
-			}
-		} catch (Exception e) {
-			log.error("Can not verify image {} to wsq from {} - {}", e.getMessage());
-			e.printStackTrace();
-		}
+		Map<String, byte[]> imagesTemplates = getTemplates(PROCESSED_IMAGES_PATH);
+		Map<String, byte[]> wsqsTemplates = getTemplates(PROCESSED_WSQS_PATH);
+		verifyTemplates(imagesTemplates, wsqsTemplates, VERIFY_IMAGE_WSQ_PATH);
 	}
 
 	@Test
@@ -178,6 +170,8 @@ class FingerprintPhotoMatcherApplicationTests {
 		// Get all images on /test/target/processed/images/ and match it with all images
 		// on /test/target/processed/images/ then put the result in
 		// /test/target/result/image-image/ on a .json containing score and match result
+		Map<String, byte[]> imagesTemplates = getTemplates(PROCESSED_IMAGES_PATH);
+		verifyTemplates(imagesTemplates, imagesTemplates, VERIFY_IMAGE_IMAGE_PATH);
 	}
 
 	@Test
@@ -185,6 +179,8 @@ class FingerprintPhotoMatcherApplicationTests {
 		// Get all WSQs on /test/target/processed/wsqs/ and match it with all WSQs
 		// on /test/target/processed/wsqs/ then put the result in
 		// /test/target/result/wsq-wsq/ on a .json containing score and match result
+		Map<String, byte[]> wsqsTemplates = getTemplates(PROCESSED_WSQS_PATH);
+		verifyTemplates(wsqsTemplates, wsqsTemplates, VERIFY_WSQ_WSQ_PATH);
 	}
 
 	private ExtractRequestVO getExtractRequestFromProcessedImage(File image, byte[] processedImage) {
@@ -223,8 +219,8 @@ class FingerprintPhotoMatcherApplicationTests {
 		}
 	}
 
-	private List<byte[]> getTemplates(String filePath) {
-		List<byte[]> templates = new ArrayList<>();
+	private Map<String, byte[]> getTemplates(String filePath) {
+		Map<String, byte[]> templates = new HashMap<>();
 		File directory = new File(filePath);
 		if (directory.isDirectory()) {
 			for (File file : directory.listFiles()) {
@@ -232,10 +228,10 @@ class FingerprintPhotoMatcherApplicationTests {
 					// Check if file is json
 					String name = file.getName();
 					String[] split = name.split("\\.");
-					if (split[1] == "json") {
+					if (split[1].equals("json")) {
 						log.info("Processing image: {}", name);
 						// Get template from json of processed image
-						templates.add(objectMapper.readValue(file, ExtractResponseVO.class).getTemplate());
+						templates.put(split[0], objectMapper.readValue(file, ExtractResponseVO.class).getTemplate());
 					}
 				} catch (IOException e) {
 					log.error("Can not read or write image {} from {} - {}", file, directory, e.getMessage());
@@ -246,6 +242,28 @@ class FingerprintPhotoMatcherApplicationTests {
 			}
 		}
 		return templates;
+	}
+
+	private void verifyTemplates(Map<String, byte[]> templates1, Map<String, byte[]> templates2,
+			String pathToStoreResult) {
+		templates1.forEach((template1Name, template1Data) -> {
+			templates2.forEach((template2Name, template2Data) -> {
+				try {
+					ExternalMatchRequestVO externalMatchRequestVO = new ExternalMatchRequestVO(template1Data,
+							template2Data);
+					MatchResponseVO match = matcherService.verifyTemplates(externalMatchRequestVO);
+
+					String json = objectMapper.writeValueAsString(match);
+					File jsonFile = new File(
+							pathToStoreResult + File.separator + template1Name + "-" + template2Name + ".json");
+					FileUtils.writeStringToFile(jsonFile, json, StandardCharsets.UTF_8);
+				} catch (Exception e) {
+					log.error("Can not verify template1: {} with template2: {} - {}", template1Name, template2Name,
+							e.getMessage());
+					e.printStackTrace();
+				}
+			});
+		});
 	}
 
 }
