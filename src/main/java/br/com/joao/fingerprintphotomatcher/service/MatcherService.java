@@ -13,6 +13,7 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import br.com.joao.fingerprintphotomatcher.rest.vo.ExternalMatchRequestVO;
+import br.com.joao.fingerprintphotomatcher.rest.vo.ExternalMatchResponseVO;
 import br.com.joao.fingerprintphotomatcher.rest.vo.ExtractResponseVO;
 import br.com.joao.fingerprintphotomatcher.rest.vo.MatchResponseVO;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +28,8 @@ public class MatcherService {
 	private static RestTemplate restTemplate = new RestTemplate();
 	private static ObjectMapper objectMapper = new ObjectMapper();
 
-	public MatchResponseVO verifyPhotos(ExtractResponseVO template1Extraction, ExtractResponseVO template2Extraction)
+	public MatchResponseVO verifyPhotos(ExtractResponseVO template1Extraction,
+			ExtractResponseVO template2Extraction)
 			throws Exception {
 		ExternalMatchRequestVO externalMatchRequestVO = new ExternalMatchRequestVO(template1Extraction.getTemplate(),
 				template2Extraction.getTemplate());
@@ -43,13 +45,21 @@ public class MatcherService {
 			HttpEntity<ExternalMatchRequestVO> request = new HttpEntity<>(externalMatchRequestVO, headers);
 			ResponseEntity<byte[]> response = restTemplate.exchange(apiVerify,
 					HttpMethod.POST, request, byte[].class);
-			MatchResponseVO matchResponse = objectMapper.readValue(response.getBody(), MatchResponseVO.class);
-			return matchResponse;
+			ExternalMatchResponseVO matchResponse = objectMapper.readValue(response.getBody(),
+					ExternalMatchResponseVO.class);
+			return convertExternalMatchResponseToMatchResponse(matchResponse);
 		} catch (Exception e) {
 			log.error("Error consuming template matcher service > url: {} | message: {}",
 					apiVerify, e.getMessage(), e);
 			throw e;
 		}
+	}
+
+	private MatchResponseVO convertExternalMatchResponseToMatchResponse(
+			ExternalMatchResponseVO externalMatchResponseVO) {
+		return new MatchResponseVO(externalMatchResponseVO.getOperation(),
+				externalMatchResponseVO.getResult(), externalMatchResponseVO.getScore(), null,
+				externalMatchResponseVO.getDescription());
 	}
 
 }

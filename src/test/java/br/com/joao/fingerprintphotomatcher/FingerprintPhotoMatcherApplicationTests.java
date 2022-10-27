@@ -263,6 +263,10 @@ class FingerprintPhotoMatcherApplicationTests {
 					ExternalMatchRequestVO externalMatchRequestVO = new ExternalMatchRequestVO(template1Data,
 							template2Data);
 					MatchResponseVO match = matcherService.verifyTemplates(externalMatchRequestVO);
+					match.setExpectedResult("NO_MATCH");
+					if (translateFingerNames(template1Name) == translateFingerNames(template2Name)) {
+						match.setExpectedResult("SUCCESS");
+					}
 
 					String json = objectMapper.writeValueAsString(match);
 					File jsonFile = new File(

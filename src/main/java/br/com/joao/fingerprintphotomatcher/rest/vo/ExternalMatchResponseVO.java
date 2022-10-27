@@ -18,7 +18,7 @@ import lombok.ToString;
 @Setter
 @ToString
 @EqualsAndHashCode
-public class MatchResponseVO implements Serializable {
+public class ExternalMatchResponseVO implements Serializable {
 
 	private OperationEnum operation;
 
@@ -26,8 +26,10 @@ public class MatchResponseVO implements Serializable {
 
 	private Integer score;
 
-	private String expectedResult;
-
 	private String description;
+
+	private String uuid;
+
+	private ZonedDateTime datetime;
 
 }

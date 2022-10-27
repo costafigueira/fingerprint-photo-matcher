@@ -1,1 +1,1 @@
-{"operation":"VERIFY","result":"SUCCESS","score":2987,"uuid":null,"description":"OK","datetime":null}
+{"operation":"VERIFY","result":"SUCCESS","score":2987,"expectedResult":"SUCCESS","description":"OK"}
