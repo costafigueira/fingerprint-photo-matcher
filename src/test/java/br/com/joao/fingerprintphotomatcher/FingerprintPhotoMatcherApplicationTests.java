@@ -27,6 +27,8 @@ import br.com.joao.fingerprintphotomatcher.rest.vo.MatchResponseVO;
 import br.com.joao.fingerprintphotomatcher.service.ExtractorService;
 import br.com.joao.fingerprintphotomatcher.service.MatcherService;
 import br.com.joao.fingerprintphotomatcher.service.PhotoService;
+import br.com.joao.fingerprintphotomatcher.util.ProcessedFilesReport;
+import br.com.joao.fingerprintphotomatcher.util.VerifyReport;
 import lombok.extern.slf4j.Slf4j;
 
 @RunWith(SpringRunner.class)
@@ -58,6 +60,8 @@ class FingerprintPhotoMatcherApplicationTests {
 
 	private static final String VERIFY_WSQ_WSQ_PATH = RESULT_PATH + File.separator + "wsq-wsq";
 
+	private static final String REPORTS_PATH = TARGET_PATH + File.separator + "reports";
+
 	private static ObjectMapper objectMapper = new ObjectMapper();
 
 	@Autowired
@@ -77,6 +81,7 @@ class FingerprintPhotoMatcherApplicationTests {
 		verifyImagesWithWsqs();
 		verifyImagesWithImages();
 		verifyWsqsWithWsqs();
+		buildReports();
 		log.info("Tests finished successfully!");
 	}
 
@@ -194,6 +199,25 @@ class FingerprintPhotoMatcherApplicationTests {
 		verifyTemplates(wsqsTemplates, wsqsTemplates, VERIFY_WSQ_WSQ_PATH);
 	}
 
+	private void buildReports() {
+		log.info("Init test reports");
+
+		log.info("Building processed images report");
+		buildProcessedFilesReport(PROCESSED_IMAGES_PATH, "Processed_Images_Report");
+
+		log.info("Building processed wsqs report");
+		buildProcessedFilesReport(PROCESSED_WSQS_PATH, "Processed_WSQs_Report");
+
+		log.info("Building verify image-wsq report");
+		buildVerifyReport(VERIFY_IMAGE_WSQ_PATH, "Verify_Image-WSQ_Report");
+
+		log.info("Building verify image-image report");
+		buildVerifyReport(VERIFY_IMAGE_IMAGE_PATH, "Verify_Image-Image_Report");
+
+		log.info("Building verify wsq-wsq report");
+		buildVerifyReport(VERIFY_WSQ_WSQ_PATH, "Verify_WSQ-WSQ_Report");
+	}
+
 	private ExtractRequestVO getExtractRequestFromProcessedImage(File image, byte[] processedImage) {
 		List<BiometricVO> biometricVOs = new ArrayList<>();
 		biometricVOs.add(new BiometricVO(translateFingerNames(image.getName()),
@@ -279,6 +303,121 @@ class FingerprintPhotoMatcherApplicationTests {
 				}
 			});
 		});
+	}
+
+	private void buildProcessedFilesReport(String pathOfProcessedFiles, String reportName) {
+		try {
+			int numberOfFiles = 0;
+			int amountOfNfiq1 = 0;
+			int amountOfNfiq2 = 0;
+			int amountOfNfiq3 = 0;
+			int amountOfNfiq4 = 0;
+			int amountOfNfiq5 = 0;
+			File processedFilesDirectory = new File(pathOfProcessedFiles);
+			if (processedFilesDirectory.isDirectory()) {
+				for (File file : processedFilesDirectory.listFiles()) {
+					// Check if file is json
+					if (file.getName().split("\\.")[1].equals("json")) {
+						numberOfFiles++;
+						// Get data from json of processed image
+						ExtractResponseVO extractResponse = objectMapper.readValue(file, ExtractResponseVO.class);
+						switch (extractResponse.getBiometrics().get(0).getNfiq()) {
+							case 1:
+								amountOfNfiq1++;
+								break;
+							case 2:
+								amountOfNfiq2++;
+								break;
+							case 3:
+								amountOfNfiq3++;
+								break;
+							case 4:
+								amountOfNfiq4++;
+								break;
+							case 5:
+								amountOfNfiq5++;
+								break;
+							default:
+								break;
+						}
+					}
+				}
+				ProcessedFilesReport processedFilesReport = new ProcessedFilesReport(numberOfFiles, amountOfNfiq1,
+						amountOfNfiq2, amountOfNfiq3, amountOfNfiq4, amountOfNfiq5);
+
+				String json = objectMapper.writeValueAsString(processedFilesReport);
+				File jsonFile = new File(REPORTS_PATH + File.separator + reportName + ".json");
+				FileUtils.writeStringToFile(jsonFile, json, StandardCharsets.UTF_8);
+			}
+		} catch (Exception e) {
+			log.error("Can not read or write json {}", e.getMessage());
+			e.printStackTrace();
+		}
+	}
+
+	private void buildVerifyReport(String pathOfVerify, String reportName) {
+		try {
+			int numberOfVerifies = 0;
+			int amountOfNoMatches = 0;
+			int expectedNoMatches = 0;
+			int amountOfMatches = 0;
+			int expectedMatches = 0;
+			double hitPercentageOfNoMatch = 0;
+			double hitPercentageOfMatch = 0;
+			double overallHitPercentage = 0;
+
+			int hits = 0;
+			File verifyDirectory = new File(pathOfVerify);
+			if (verifyDirectory.isDirectory()) {
+				for (File file : verifyDirectory.listFiles()) {
+					// Check if file is json
+					if (file.getName().split("\\.")[1].equals("json")) {
+						numberOfVerifies++;
+						// Get data from json of processed image
+						MatchResponseVO matchResponse = objectMapper.readValue(file, MatchResponseVO.class);
+						switch (matchResponse.getResult()) {
+							case SUCCESS:
+								amountOfMatches++;
+								break;
+							case NO_MATCH:
+								amountOfNoMatches++;
+								break;
+							case FAILURE:
+							default:
+								break;
+						}
+						switch (matchResponse.getExpectedResult()) {
+							case "SUCCESS":
+								expectedMatches++;
+								break;
+							case "NO_MATCH":
+								expectedNoMatches++;
+								break;
+							default:
+								break;
+						}
+						if (matchResponse.getResult().toString().equals(matchResponse.getExpectedResult())) {
+							hits++;
+						}
+					}
+				}
+				hitPercentageOfNoMatch = (double) amountOfNoMatches / (double) expectedNoMatches * 100.0;
+				hitPercentageOfMatch = (double) amountOfMatches / (double) expectedMatches * 100.0;
+				overallHitPercentage = (double) hits / (double)numberOfVerifies * 100.0;
+
+				VerifyReport verifyReport = new VerifyReport(numberOfVerifies, amountOfNoMatches, expectedNoMatches,
+						hitPercentageOfNoMatch, amountOfMatches, expectedMatches, hitPercentageOfMatch,
+						overallHitPercentage);
+
+				String json = objectMapper.writeValueAsString(verifyReport);
+				File jsonFile = new File(REPORTS_PATH + File.separator + reportName + ".json");
+				FileUtils.writeStringToFile(jsonFile, json, StandardCharsets.UTF_8);
+			}
+
+		} catch (Exception e) {
+			log.error("Can not read or write json {}", e.getMessage());
+			e.printStackTrace();
+		}
 	}
 
 }

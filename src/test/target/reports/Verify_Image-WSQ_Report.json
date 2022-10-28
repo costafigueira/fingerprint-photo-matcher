@@ -1,0 +1,10 @@
+{
+	"numberOfVerifies": 506,
+	"amountOfNoMatches": 469,
+	"expectedNoMatches": 454,
+	"hitPercentageOfNoMatch": 103.30396475770924,
+	"amountOfMatches": 37,
+	"expectedMatches": 52,
+	"hitPercentageOfMatch": 71.15384615384616,
+	"overallHitPercentage": 97.03557312252964
+}
