@@ -34,6 +34,7 @@ public class PhotoService {
 	public byte[] processImage(byte[] image) {
 		Mat matImage = getMatFromByteArrayImage(image);
 
+		matImage = flipImage(matImage);
 		matImage = removeBackgroundSimple(matImage);
 		// matImage = removeBackground(matImage);
 		matImage = convertImageToGrayScale(matImage);
@@ -63,6 +64,13 @@ public class PhotoService {
 		Imgcodecs.imencode(".png", image, matOfByte);
 		byte[] byteArray = matOfByte.toArray();
 		return byteArray;
+	}
+
+	private Mat flipImage(Mat image) {
+		log.info("Flipping image");
+		Mat flippedImage = new Mat();
+		Core.flip(image, flippedImage, 1);
+		return flippedImage;
 	}
 
 	private Mat convertImageToGrayScale(Mat image) {
