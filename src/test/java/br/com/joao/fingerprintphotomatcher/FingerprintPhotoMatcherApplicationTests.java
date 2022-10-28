@@ -240,7 +240,7 @@ class FingerprintPhotoMatcherApplicationTests {
 					String name = file.getName();
 					String[] split = name.split("\\.");
 					if (split[1].equals("json")) {
-						log.info("Processing image: {}", name);
+						log.info("Getting template from file: {}", name);
 						// Get template from json of processed image
 						templates.put(split[0], objectMapper.readValue(file, ExtractResponseVO.class).getTemplate());
 					}

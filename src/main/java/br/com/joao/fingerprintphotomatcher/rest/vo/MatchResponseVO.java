@@ -1,7 +1,6 @@
 package br.com.joao.fingerprintphotomatcher.rest.vo;
 
 import java.io.Serializable;
-import java.time.ZonedDateTime;
 
 import br.com.joao.fingerprintphotomatcher.enumeration.OperationEnum;
 import br.com.joao.fingerprintphotomatcher.enumeration.ResultEnum;
