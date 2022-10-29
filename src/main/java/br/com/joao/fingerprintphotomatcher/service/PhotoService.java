@@ -90,7 +90,7 @@ public class PhotoService {
 	private Mat binarizeImage(Mat image) {
 		log.info("Binarize image");
 		Mat binaryImage = new Mat();
-		Imgproc.threshold(image, binaryImage, 128, 255, Imgproc.THRESH_BINARY);
+		Imgproc.threshold(image, binaryImage, 127, 255, Imgproc.THRESH_BINARY);
 		return binaryImage;
 	}
 
