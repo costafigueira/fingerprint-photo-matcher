@@ -10,6 +10,4 @@ FROM openjdk:8
 RUN mkdir -p /home/service/temp/
 COPY --from=build /workspace/target/*.jar /home/service/service.jar
 COPY --from=build /workspace/target /home/service/temp
-# ARG JVM_OPTS_ARG=-Xmx256m
-# ENV JVM_OPTS=$JVM_OPTS_ARG
 ENTRYPOINT exec java -jar /home/service/service.jar
