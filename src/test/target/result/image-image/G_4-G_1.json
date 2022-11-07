@@ -1,1 +1,1 @@
-{"operation":"VERIFY","result":"NO_MATCH","score":30,"expectedResult":"SUCCESS","description":"MATCH_NOT_FOUND"}
+{"operation":"VERIFY","result":"SUCCESS","score":380,"expectedResult":"SUCCESS","description":"OK"}
