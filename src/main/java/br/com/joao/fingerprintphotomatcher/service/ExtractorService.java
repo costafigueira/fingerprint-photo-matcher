@@ -33,13 +33,11 @@ public class ExtractorService {
 	@Value("${neurotec.api.convert:http://neurotec-services.hom.bry.com.br/api/convert-image}")
 	private String apiConversion;
 
-	@Value("${neurotec.api.details:http://neurotec-services.hom.bry.com.br/api/content-details}")
-	private String apiContentDetails;
-
 	private static RestTemplate restTemplate = new RestTemplate();
 	private static ObjectMapper objectMapper = new ObjectMapper();
 
 	public ExtractResponseVO externalExtraction(ExtractRequestVO extractRequestVO) throws Exception {
+		log.info("Preparing data to send to extractor");
 		List<ExtractorBiometricVO> biometrics = new ArrayList<>();
 
 		extractRequestVO.getBiometrics().stream().forEach(biometry -> {
@@ -55,6 +53,7 @@ public class ExtractorService {
 			boolean quality)
 			throws Exception {
 		try {
+			log.info("Sending data to extractor");
 			HttpHeaders headers = new HttpHeaders();
 			String ctxId = UUID.randomUUID().toString().substring(0, 7);
 			headers.set("ctxId", ctxId);
@@ -64,6 +63,7 @@ public class ExtractorService {
 					HttpMethod.POST, request, byte[].class);
 			ExternalExtractResponseVO extractTemplate = objectMapper.readValue(response.getBody(),
 					ExternalExtractResponseVO.class);
+			log.info("Data extracted successfully");
 			return extractTemplate;
 		} catch (Exception e) {
 			log.error("Error consuming template extractor service > url: {} | message: {}",
@@ -74,6 +74,7 @@ public class ExtractorService {
 
 	private ExtractResponseVO convertExternalExtractionResponseToExtractionResponse(
 			ExternalExtractResponseVO externalExtraction) {
+		log.info("Converting extraction to more readeble result");
 		ExtractResponseVO extractResponseVO = new ExtractResponseVO(externalExtraction.getTemplate());
 		externalExtraction.getFingers()
 				.forEach((bodyPartName, data) -> externalExtraction.getQuality()
@@ -90,6 +91,7 @@ public class ExtractorService {
 
 	public byte[] requestImageConversion(byte[] image, Boolean convertToPng, Boolean detail, Boolean showMinutiae,
 			String imageFormat) throws Exception {
+		log.info("Requesting image conversion");
 		String ctxId = UUID.randomUUID().toString().substring(0, 7);
 		HttpHeaders headers = new HttpHeaders();
 		UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(apiConversion)
@@ -101,6 +103,7 @@ public class ExtractorService {
 			HttpEntity<byte[]> request = new HttpEntity<>(image, headers);
 			ResponseEntity<byte[]> response = restTemplate.exchange(builder.toUriString(), HttpMethod.POST, request,
 					byte[].class);
+			log.info("Image converted successfully");
 			return response.getBody();
 		} catch (Exception e) {
 			log.error("Error consuming image conversion service > url: {} | message: {}",

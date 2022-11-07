@@ -41,8 +41,6 @@ public class PhotoService {
 		matImage = invertImage(matImage);
 		matImage = applyAdaptiveHistogramEqualization(matImage);
 		matImage = binarizeImage(matImage);
-		// matImage = applyGaborFilter(matImage);
-		// matImage = applyEdgeDetector(matImage);
 
 		return getByteArrayImageFromMat(matImage);
 	}
@@ -80,13 +78,6 @@ public class PhotoService {
 		return grayScaleImage;
 	}
 
-	private Mat normalizeImage(Mat image) {
-		log.info("Normalizing image");
-		Mat normalizedImage = new Mat();
-		Core.normalize(image, normalizedImage, 0, 128, Core.NORM_MINMAX);
-		return normalizedImage;
-	}
-
 	private Mat binarizeImage(Mat image) {
 		log.info("Binarize image");
 		Mat binaryImage = new Mat();
@@ -114,6 +105,13 @@ public class PhotoService {
 		Mat equalizedImage = new Mat();
 		Imgproc.equalizeHist(image, equalizedImage);
 		return equalizedImage;
+	}
+
+	private Mat normalizeImage(Mat image) {
+		log.info("Normalizing image");
+		Mat normalizedImage = new Mat();
+		Core.normalize(image, normalizedImage, 0, 128, Core.NORM_MINMAX);
+		return normalizedImage;
 	}
 
 	private Mat removeBackground(Mat image) {

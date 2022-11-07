@@ -36,8 +36,6 @@ public class FingerprintPhotoMatcherController {
 	@Autowired
 	private MatcherService matcherService;
 
-	// @PostMapping(value = "/process-image", produces = {
-	// MediaType.APPLICATION_OCTET_STREAM_VALUE })
 	@PostMapping("/process-image")
 	public ResponseEntity<String> processImage(HttpServletRequest request,
 			@RequestBody ImageRequestVO imageRequestVO) {

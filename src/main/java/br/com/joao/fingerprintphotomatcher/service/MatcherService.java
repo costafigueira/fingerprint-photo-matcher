@@ -31,6 +31,7 @@ public class MatcherService {
 	public MatchResponseVO verifyPhotos(ExtractResponseVO template1Extraction,
 			ExtractResponseVO template2Extraction)
 			throws Exception {
+		log.info("Preparing data to send to matcher");
 		ExternalMatchRequestVO externalMatchRequestVO = new ExternalMatchRequestVO(template1Extraction.getTemplate(),
 				template2Extraction.getTemplate());
 		return verifyTemplates(externalMatchRequestVO);
@@ -47,6 +48,7 @@ public class MatcherService {
 					HttpMethod.POST, request, byte[].class);
 			ExternalMatchResponseVO matchResponse = objectMapper.readValue(response.getBody(),
 					ExternalMatchResponseVO.class);
+			log.info("Data matched successfully");
 			return convertExternalMatchResponseToMatchResponse(matchResponse);
 		} catch (Exception e) {
 			log.error("Error consuming template matcher service > url: {} | message: {}",
@@ -57,6 +59,7 @@ public class MatcherService {
 
 	private MatchResponseVO convertExternalMatchResponseToMatchResponse(
 			ExternalMatchResponseVO externalMatchResponseVO) {
+		log.info("Converting match result to more readeble result");
 		return new MatchResponseVO(externalMatchResponseVO.getOperation(),
 				externalMatchResponseVO.getResult(), externalMatchResponseVO.getScore(), null,
 				externalMatchResponseVO.getDescription());
