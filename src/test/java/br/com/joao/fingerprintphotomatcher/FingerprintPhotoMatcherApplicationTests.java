@@ -277,7 +277,7 @@ class FingerprintPhotoMatcherApplicationTests {
 						log.info("Getting template from file: {}", name);
 						// Get template from json of processed file
 						ExtractResponseVO extractedFile = objectMapper.readValue(file, ExtractResponseVO.class);
-						if (extractedFile.getBiometrics().get(0).getNfiq() <= 3) {
+						if (extractedFile.getBiometrics().get(0).getNfiq() <= 5) {
 							templates.put(split[0], extractedFile.getTemplate());
 						}
 					}
