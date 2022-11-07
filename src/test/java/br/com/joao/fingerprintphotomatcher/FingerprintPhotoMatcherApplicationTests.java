@@ -275,13 +275,16 @@ class FingerprintPhotoMatcherApplicationTests {
 					String[] split = name.split("\\.");
 					if (split[1].equals("json")) {
 						log.info("Getting template from file: {}", name);
-						// Get template from json of processed image
-						templates.put(split[0], objectMapper.readValue(file, ExtractResponseVO.class).getTemplate());
+						// Get template from json of processed file
+						ExtractResponseVO extractedFile = objectMapper.readValue(file, ExtractResponseVO.class);
+						if (extractedFile.getBiometrics().get(0).getNfiq() <= 3) {
+							templates.put(split[0], extractedFile.getTemplate());
+						}
 					}
 				} catch (IOException e) {
-					log.error("Can not read or write image {} from {} - {}", file, directory, e.getMessage());
+					log.error("Can not read or write file {} from {} - {}", file, directory, e.getMessage());
 				} catch (Exception e) {
-					log.error("Can not read or write image {} from {} - {}", file, directory, e.getMessage());
+					log.error("Can not read or write file {} from {} - {}", file, directory, e.getMessage());
 					e.printStackTrace();
 				}
 			}
