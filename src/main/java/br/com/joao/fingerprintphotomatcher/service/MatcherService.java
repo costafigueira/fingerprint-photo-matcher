@@ -59,7 +59,7 @@ public class MatcherService {
 
 	private MatchResponseVO convertExternalMatchResponseToMatchResponse(
 			ExternalMatchResponseVO externalMatchResponseVO) {
-		log.info("Converting match result to more readeble result");
+		log.info("Converting match result to more readable result");
 		return new MatchResponseVO(externalMatchResponseVO.getOperation(),
 				externalMatchResponseVO.getResult(), externalMatchResponseVO.getScore(), null,
 				externalMatchResponseVO.getDescription());

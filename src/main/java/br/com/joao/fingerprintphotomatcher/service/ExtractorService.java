@@ -74,7 +74,7 @@ public class ExtractorService {
 
 	private ExtractResponseVO convertExternalExtractionResponseToExtractionResponse(
 			ExternalExtractResponseVO externalExtraction) {
-		log.info("Converting extraction to more readeble result");
+		log.info("Converting extraction to more readable result");
 		ExtractResponseVO extractResponseVO = new ExtractResponseVO(externalExtraction.getTemplate());
 		externalExtraction.getFingers()
 				.forEach((bodyPartName, data) -> externalExtraction.getQuality()

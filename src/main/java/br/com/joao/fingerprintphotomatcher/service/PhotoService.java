@@ -35,8 +35,8 @@ public class PhotoService {
 		Mat matImage = getMatFromByteArrayImage(image);
 
 		matImage = flipImage(matImage);
-		matImage = removeBackgroundSimple(matImage);
-		// matImage = removeBackground(matImage);
+		matImage = removeBackground(matImage);
+		// matImage = removeBackgroundAdvanced(matImage);
 		matImage = convertImageToGrayScale(matImage);
 		matImage = invertImage(matImage);
 		matImage = applyAdaptiveHistogramEqualization(matImage);
@@ -100,30 +100,7 @@ public class PhotoService {
 		return claheImage;
 	}
 
-	private Mat applyEqualization(Mat image) {
-		log.info("Applying Equalization");
-		Mat equalizedImage = new Mat();
-		Imgproc.equalizeHist(image, equalizedImage);
-		return equalizedImage;
-	}
-
-	private Mat normalizeImage(Mat image) {
-		log.info("Normalizing image");
-		Mat normalizedImage = new Mat();
-		Core.normalize(image, normalizedImage, 0, 128, Core.NORM_MINMAX);
-		return normalizedImage;
-	}
-
 	private Mat removeBackground(Mat image) {
-		log.info("Removing background of image");
-		Mat mask = removeBackgroundSimple(image);
-		Core.bitwise_not(mask, mask);
-		Core.inRange(mask, new Scalar(0, 0, 0), new Scalar(10, 10, 10), mask);
-		Core.bitwise_not(mask, mask);
-		return removeBackgroundFromMask(image, mask);
-	}
-
-	private Mat removeBackgroundSimple(Mat image) {
 		log.info("Removing simple background of image");
 
 		int r = image.rows();
@@ -146,35 +123,18 @@ public class PhotoService {
 		return foreground;
 	}
 
-	private Mat removeBackgroundFromMask(Mat image, Mat mask) {
-		log.info("Removing background from mask");
-		int r = image.rows();
-		int c = image.cols();
-		Point p1 = new Point(c / 100, r / 100);
-		Point p2 = new Point(c - c / 100, r - r / 100);
-		Rect rect = new Rect(p1, p2);
-		Mat fgdModel = new Mat();
-		Mat bgdModel = new Mat();
-
-		convertToOpencvValues(mask); // from human readable values to OpenCV values
-		Imgproc.grabCut(image, mask, rect, bgdModel, fgdModel, 5, Imgproc.GC_INIT_WITH_MASK);
-		convertToHumanValues(mask); // back to human readable values
-		Imgproc.threshold(mask, mask, 128, 255, Imgproc.THRESH_TOZERO);
-
-		Mat foreground = new Mat(image.size(), CvType.CV_8UC1, new Scalar(0, 0, 0));
-		image.copyTo(foreground, mask);
-		return foreground;
+	private Mat applyEqualization(Mat image) {
+		log.info("Applying Equalization");
+		Mat equalizedImage = new Mat();
+		Imgproc.equalizeHist(image, equalizedImage);
+		return equalizedImage;
 	}
 
-	private Mat removeBackgroundAdvanced(Mat image) {
-		log.info("Removing advanced background of image");
-		Mat mask = new Mat();
-		Imgproc.threshold(image, mask, 128, 255, Imgproc.THRESH_BINARY);
-
-		Core.inRange(mask, new Scalar(0, 0, 0), new Scalar(10, 10, 10), mask);
-		Core.bitwise_not(mask, mask);
-
-		return removeBackgroundFromMask(image, mask);
+	private Mat normalizeImage(Mat image) {
+		log.info("Normalizing image");
+		Mat normalizedImage = new Mat();
+		Core.normalize(image, normalizedImage, 0, 128, Core.NORM_MINMAX);
+		return normalizedImage;
 	}
 
 	private Mat applyGaborFilter(Mat image) {
@@ -228,6 +188,37 @@ public class PhotoService {
 		Mat dest = new Mat(image.height(), image.width(), CvType.CV_8UC1);
 		image.copyTo(dest, detectedEdges);
 		return dest;
+	}
+
+	private Mat removeBackgroundAdvanced(Mat image) {
+		log.info("Removing advanced background of image");
+		Mat mask = new Mat();
+		Imgproc.threshold(image, mask, 128, 255, Imgproc.THRESH_BINARY);
+
+		Core.inRange(mask, new Scalar(0, 0, 0), new Scalar(10, 10, 10), mask);
+		Core.bitwise_not(mask, mask);
+
+		return removeBackgroundFromMask(image, mask);
+	}
+
+	private Mat removeBackgroundFromMask(Mat image, Mat mask) {
+		log.info("Removing background from mask");
+		int r = image.rows();
+		int c = image.cols();
+		Point p1 = new Point(c / 100, r / 100);
+		Point p2 = new Point(c - c / 100, r - r / 100);
+		Rect rect = new Rect(p1, p2);
+		Mat fgdModel = new Mat();
+		Mat bgdModel = new Mat();
+
+		convertToOpencvValues(mask); // from human readable values to OpenCV values
+		Imgproc.grabCut(image, mask, rect, bgdModel, fgdModel, 5, Imgproc.GC_INIT_WITH_MASK);
+		convertToHumanValues(mask); // back to human readable values
+		Imgproc.threshold(mask, mask, 128, 255, Imgproc.THRESH_TOZERO);
+
+		Mat foreground = new Mat(image.size(), CvType.CV_8UC1, new Scalar(0, 0, 0));
+		image.copyTo(foreground, mask);
+		return foreground;
 	}
 
 	private void convertToHumanValues(Mat mask) {
