@@ -76,6 +76,7 @@ class FingerprintPhotoMatcherApplicationTests {
 	@Test
 	void executeTests() {
 		log.info("Tests started");
+		cleanPreviousTests();
 		processImages();
 		processWsqs();
 		verifyImagesWithWsqs();
@@ -83,6 +84,15 @@ class FingerprintPhotoMatcherApplicationTests {
 		verifyWsqsWithWsqs();
 		buildReports();
 		log.info("Tests finished successfully!");
+	}
+
+	private void cleanPreviousTests() {
+		try {
+			log.info("Cleaning previous tests");
+			FileUtils.deleteDirectory(new File(TARGET_PATH));
+		} catch (IOException e) {
+			log.error("Error trying to delete target directory - {}", e.getMessage());
+		}
 	}
 
 	// Get all images on /test/resources/images/ process it then put the result in
