@@ -24,6 +24,8 @@ import br.com.joao.fingerprintphotomatcher.rest.vo.ExternalMatchRequestVO;
 import br.com.joao.fingerprintphotomatcher.rest.vo.ExtractRequestVO;
 import br.com.joao.fingerprintphotomatcher.rest.vo.ExtractResponseVO;
 import br.com.joao.fingerprintphotomatcher.rest.vo.MatchResponseVO;
+import br.com.joao.fingerprintphotomatcher.rest.vo.PostmanEnvValueVO;
+import br.com.joao.fingerprintphotomatcher.rest.vo.PostmanEnvironmentVO;
 import br.com.joao.fingerprintphotomatcher.service.ExtractorService;
 import br.com.joao.fingerprintphotomatcher.service.MatcherService;
 import br.com.joao.fingerprintphotomatcher.service.PhotoService;
@@ -62,6 +64,8 @@ class FingerprintPhotoMatcherApplicationTests {
 
 	private static final String REPORTS_PATH = TARGET_PATH + File.separator + "reports";
 
+	private static final String POSTMAN_ENV_PATH = TARGET_PATH + File.separator + "postman-env";
+
 	private static ObjectMapper objectMapper = new ObjectMapper();
 
 	@Autowired
@@ -77,6 +81,7 @@ class FingerprintPhotoMatcherApplicationTests {
 	void executeTests() {
 		log.info("Tests started");
 		cleanPreviousTests();
+		buildPostmanEnvFile();
 		processImages();
 		processWsqs();
 		verifyImagesWithWsqs();
@@ -86,6 +91,7 @@ class FingerprintPhotoMatcherApplicationTests {
 		log.info("Tests finished successfully!");
 	}
 
+	// Clean the target directory with previous tests
 	private void cleanPreviousTests() {
 		try {
 			log.info("Cleaning previous tests");
@@ -416,7 +422,7 @@ class FingerprintPhotoMatcherApplicationTests {
 				}
 				hitPercentageOfNoMatch = (double) amountOfNoMatches / (double) expectedNoMatches * 100.0;
 				hitPercentageOfMatch = (double) amountOfMatches / (double) expectedMatches * 100.0;
-				overallHitPercentage = (double) hits / (double)numberOfVerifies * 100.0;
+				overallHitPercentage = (double) hits / (double) numberOfVerifies * 100.0;
 
 				VerifyReport verifyReport = new VerifyReport(numberOfVerifies, amountOfNoMatches, expectedNoMatches,
 						hitPercentageOfNoMatch, amountOfMatches, expectedMatches, hitPercentageOfMatch,
@@ -430,6 +436,49 @@ class FingerprintPhotoMatcherApplicationTests {
 		} catch (Exception e) {
 			log.error("Can not read or write json {}", e.getMessage());
 			e.printStackTrace();
+		}
+	}
+
+	private void buildPostmanEnvFile() {
+		try {
+			log.info("Building postman env json file");
+			PostmanEnvironmentVO postmanEnvironmentVO = new PostmanEnvironmentVO();
+			List<PostmanEnvValueVO> values = postmanEnvironmentVO.getValues();
+
+			File imagesDirectory = new File(RESOURCES_IMAGES_PATH);
+			if (imagesDirectory.isDirectory()) {
+				for (File image : imagesDirectory.listFiles()) {
+					String name = image.getName();
+					String[] split = name.split("\\.");
+
+					PostmanEnvValueVO postmanEnvValueVO = new PostmanEnvValueVO();
+					postmanEnvValueVO.setKey(split[0]);
+					postmanEnvValueVO
+							.setValue(Base64.getEncoder().encodeToString(FileUtils.readFileToByteArray(image)));
+					values.add(postmanEnvValueVO);
+				}
+			}
+
+			File wsqsDirectory = new File(RESOURCES_WSQS_PATH);
+			if (wsqsDirectory.isDirectory()) {
+				for (File wsq : wsqsDirectory.listFiles()) {
+					String name = wsq.getName();
+					String[] split = name.split("\\.");
+
+					PostmanEnvValueVO postmanEnvValueVO = new PostmanEnvValueVO();
+					postmanEnvValueVO.setKey(split[0] + "_WSQ");
+					postmanEnvValueVO
+							.setValue(Base64.getEncoder().encodeToString(FileUtils.readFileToByteArray(wsq)));
+					values.add(postmanEnvValueVO);
+				}
+			}
+
+			String json = objectMapper.writeValueAsString(postmanEnvironmentVO);
+			File jsonFile = new File(
+					POSTMAN_ENV_PATH + File.separator + "Fingerprint Photo Matcher Generated.postman_environment.json");
+			FileUtils.writeStringToFile(jsonFile, json, StandardCharsets.UTF_8);
+		} catch (Exception e) {
+			log.error("Error building postman environment - {}", e.getMessage());
 		}
 	}
 
