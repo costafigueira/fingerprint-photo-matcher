@@ -14,7 +14,7 @@ Para subir a API pode ser utilizado o docker e docker-compose disponibilizado na
 Ou rodar localmente a aplicação Java Spring com Maven, tendo instalado Java 8 e Maven 3.6.1. Com todas as dependências instaladas, executar a partir da raiz do projeto:
 
 	mvn clean install -DskipTests
-	java -jar /target/fingerprint-photo-matcher-0.0.1-SNAPSHOT.jar
+	java -jar target/fingerprint-photo-matcher-0.0.1-SNAPSHOT.jar
 
 # Como utilizar?
 O Fingerprint Photo Matcher após executado pode ser utilizado via API que possui uma documentação Postman presente em /src/resources/api.
