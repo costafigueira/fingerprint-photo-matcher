@@ -3,8 +3,8 @@ FROM maven:3.6.1-jdk-8-slim AS build
 RUN mkdir -p /workspace
 WORKDIR /workspace
 COPY . /workspace
+# Uncomment OR comment below to skip or not the tests
 RUN --mount=type=cache,target=/root/.m2 mvn clean install
-# Uncomment below to skip tests
 # RUN --mount=type=cache,target=/root/.m2 mvn clean install -DskipTests
 
 # ### STAGE 2: Run ###
