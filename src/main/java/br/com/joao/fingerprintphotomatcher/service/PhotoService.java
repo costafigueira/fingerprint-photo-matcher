@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
-import javax.annotation.PostConstruct;
-
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -19,6 +17,7 @@ import org.opencv.imgproc.Imgproc;
 import org.springframework.stereotype.Service;
 
 import br.com.joao.fingerprintphotomatcher.rest.vo.BiometricVO;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import nu.pattern.OpenCV;
 
@@ -28,7 +27,7 @@ public class PhotoService {
 
 	@PostConstruct
 	private void init() {
-		OpenCV.loadShared();
+		OpenCV.loadLocally();
 	}
 
 	public byte[] processImage(byte[] image) {
@@ -54,7 +53,7 @@ public class PhotoService {
 	}
 
 	private Mat getMatFromByteArrayImage(byte[] image) {
-		return Imgcodecs.imdecode(new MatOfByte(image), Imgcodecs.CV_LOAD_IMAGE_UNCHANGED);
+		return Imgcodecs.imdecode(new MatOfByte(image), Imgcodecs.IMREAD_UNCHANGED);
 	}
 
 	private byte[] getByteArrayImageFromMat(Mat image) {
