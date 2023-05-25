@@ -8,6 +8,9 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
@@ -101,6 +104,19 @@ class FingerprintPhotoMatcherApplicationTests {
 		}
 	}
 
+	private <T> void executeInParallel(T[] array, Consumer<T> consumer) {
+		ExecutorService executorService = Executors.newFixedThreadPool(15); // Adjust the thread pool size as needed
+		for (T item : array) {
+			executorService.submit(() -> {
+				consumer.accept(item);
+			});
+		}
+		executorService.shutdown();
+		while (!executorService.isTerminated()) {
+			// Wait for all tasks to complete
+		}
+	}
+
 	// Get all images on /test/resources/images/ process it then put the result in
 	// /test/target/processed/images/ on 2 files: 1 .png and 1 .json containing
 	// Base64, NFIQ and number of minutiae
@@ -108,7 +124,7 @@ class FingerprintPhotoMatcherApplicationTests {
 		log.info("Init process images test");
 		File imagesDirectory = new File(RESOURCES_IMAGES_PATH);
 		if (imagesDirectory.isDirectory()) {
-			for (File image : imagesDirectory.listFiles()) {
+			executeInParallel(imagesDirectory.listFiles(), image -> {
 				try {
 					String name = image.getName();
 					log.info("Processing image: {}", name);
@@ -122,11 +138,9 @@ class FingerprintPhotoMatcherApplicationTests {
 					// Extract template from finger and write .json containing Base64, NFIQ and
 					// number of minutiae
 					ExtractRequestVO extractRequestVO = getExtractRequestFromProcessedImage(image, processedImage);
-					ExtractResponseVO externalExtraction = extractorService
-							.externalExtraction(extractRequestVO);
+					ExtractResponseVO externalExtraction = extractorService.externalExtraction(extractRequestVO);
 					String json = objectMapper.writeValueAsString(externalExtraction);
-					File jsonFile = new File(
-							PROCESSED_IMAGES_PATH + File.separator + split[0] + ".json");
+					File jsonFile = new File(PROCESSED_IMAGES_PATH + File.separator + split[0] + ".json");
 					FileUtils.writeStringToFile(jsonFile, json, StandardCharsets.UTF_8);
 
 					// Get image with minutiaes and write it to a .png with same name format
@@ -142,7 +156,7 @@ class FingerprintPhotoMatcherApplicationTests {
 					log.error("Can not read or write image {} from {} - {}", image, imagesDirectory, e.getMessage());
 					e.printStackTrace();
 				}
-			}
+			});
 		}
 	}
 
@@ -153,7 +167,7 @@ class FingerprintPhotoMatcherApplicationTests {
 		log.info("Init process wsqs test");
 		File wsqsDirectory = new File(RESOURCES_WSQS_PATH);
 		if (wsqsDirectory.isDirectory()) {
-			for (File wsq : wsqsDirectory.listFiles()) {
+			executeInParallel(wsqsDirectory.listFiles(), wsq -> {
 				try {
 					String name = wsq.getName();
 					log.info("Processing wsq: {}", name);
@@ -183,7 +197,7 @@ class FingerprintPhotoMatcherApplicationTests {
 					log.error("Can not read or write image {} from {} - {}", wsq, wsqsDirectory, e.getMessage());
 					e.printStackTrace();
 				}
-			}
+			});
 		}
 	}
 
@@ -274,7 +288,7 @@ class FingerprintPhotoMatcherApplicationTests {
 		Map<String, byte[]> templates = new HashMap<>();
 		File directory = new File(filePath);
 		if (directory.isDirectory()) {
-			for (File file : directory.listFiles()) {
+			executeInParallel(directory.listFiles(), file -> {
 				try {
 					// Check if file is json
 					String name = file.getName();
@@ -293,35 +307,43 @@ class FingerprintPhotoMatcherApplicationTests {
 					log.error("Can not read or write file {} from {} - {}", file, directory, e.getMessage());
 					e.printStackTrace();
 				}
-			}
+			});
 		}
 		return templates;
 	}
 
 	private void verifyTemplates(Map<String, byte[]> templates1, Map<String, byte[]> templates2,
 			String pathToStoreResult) {
+		ExecutorService executorService = Executors.newFixedThreadPool(15); // Adjust the thread pool size as needed
 		templates1.forEach((template1Name, template1Data) -> {
 			templates2.forEach((template2Name, template2Data) -> {
-				try {
-					ExternalMatchRequestVO externalMatchRequestVO = new ExternalMatchRequestVO(template1Data,
-							template2Data);
-					MatchResponseVO match = matcherService.verifyTemplates(externalMatchRequestVO);
-					match.setExpectedResult("NO_MATCH");
-					if (translateFingerNames(template1Name) == translateFingerNames(template2Name)) {
-						match.setExpectedResult("SUCCESS");
-					}
+				executorService.submit(() -> {
+					try {
+						ExternalMatchRequestVO externalMatchRequestVO = new ExternalMatchRequestVO(template1Data,
+								template2Data);
+						MatchResponseVO match = matcherService.verifyTemplates(externalMatchRequestVO);
+						match.setExpectedResult("NO_MATCH");
+						if (translateFingerNames(template1Name) == translateFingerNames(template2Name)) {
+							match.setExpectedResult("SUCCESS");
+						}
 
-					String json = objectMapper.writeValueAsString(match);
-					File jsonFile = new File(
-							pathToStoreResult + File.separator + template1Name + "-" + template2Name + ".json");
-					FileUtils.writeStringToFile(jsonFile, json, StandardCharsets.UTF_8);
-				} catch (Exception e) {
-					log.error("Can not verify template1: {} with template2: {} - {}", template1Name, template2Name,
-							e.getMessage());
-					e.printStackTrace();
-				}
+						String json = objectMapper.writeValueAsString(match);
+						File jsonFile = new File(
+								pathToStoreResult + File.separator + template1Name + "-" + template2Name + ".json");
+						FileUtils.writeStringToFile(jsonFile, json, StandardCharsets.UTF_8);
+					} catch (Exception e) {
+						log.error("Can not verify template1: {} with template2: {} - {}", template1Name, template2Name,
+								e.getMessage());
+						e.printStackTrace();
+					}
+				});
 			});
 		});
+
+		executorService.shutdown();
+		while (!executorService.isTerminated()) {
+			// Wait for all tasks to complete
+		}
 	}
 
 	private void buildProcessedFilesReport(String pathOfProcessedFiles, String reportName) {
