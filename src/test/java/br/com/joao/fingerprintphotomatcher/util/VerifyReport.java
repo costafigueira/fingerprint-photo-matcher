@@ -27,5 +27,15 @@ public class VerifyReport implements Serializable {
 	private int expectedMatches;
 	private double hitPercentageOfMatch;
 
+	private int amountOfFalseAcceptances;
+	private int amountOfFalseRejections;
+	private int amountOfTrueAcceptances;
+	private int amountOfTrueRejections;
+	private double far;
+	private double frr;
+	private double tar;
+	private double trr;
+	private double eer;
+
 	private double overallHitPercentage;
 }

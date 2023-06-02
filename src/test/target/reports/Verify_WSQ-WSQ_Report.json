@@ -1,1 +1,1 @@
-{"numberOfVerifies":484,"amountOfNoMatches":434,"expectedNoMatches":434,"hitPercentageOfNoMatch":100.0,"amountOfMatches":50,"expectedMatches":50,"hitPercentageOfMatch":100.0,"overallHitPercentage":100.0}
+{"numberOfVerifies":484,"amountOfNoMatches":434,"expectedNoMatches":434,"hitPercentageOfNoMatch":100.0,"amountOfMatches":50,"expectedMatches":50,"hitPercentageOfMatch":100.0,"amountOfFalseAcceptances":0,"amountOfFalseRejections":0,"amountOfTrueAcceptances":50,"amountOfTrueRejections":434,"far":0.0,"frr":0.0,"tar":100.0,"trr":100.0,"eer":0.0,"overallHitPercentage":100.0}

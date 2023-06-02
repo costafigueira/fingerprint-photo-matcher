@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import br.com.joao.fingerprintphotomatcher.enumeration.BodyPartEnum;
@@ -104,6 +105,7 @@ class FingerprintPhotoMatcherApplicationTests {
 		}
 	}
 
+	// Execute consumer of each item of the array in parallel
 	private <T> void executeInParallel(T[] array, Consumer<T> consumer) {
 		ExecutorService executorService = Executors.newFixedThreadPool(15); // Adjust the thread pool size as needed
 		for (T item : array) {
@@ -135,21 +137,7 @@ class FingerprintPhotoMatcherApplicationTests {
 					File processed = new File(PROCESSED_IMAGES_PATH + File.separator + name);
 					FileUtils.writeByteArrayToFile(processed, processedImage);
 
-					// Extract template from finger and write .json containing Base64, NFIQ and
-					// number of minutiae
-					ExtractRequestVO extractRequestVO = getExtractRequestFromProcessedImage(image, processedImage);
-					ExtractResponseVO externalExtraction = extractorService.externalExtraction(extractRequestVO);
-					String json = objectMapper.writeValueAsString(externalExtraction);
-					File jsonFile = new File(PROCESSED_IMAGES_PATH + File.separator + split[0] + ".json");
-					FileUtils.writeStringToFile(jsonFile, json, StandardCharsets.UTF_8);
-
-					// Get image with minutiaes and write it to a .png with same name format
-					byte[] imageWithMinutiae = extractorService.requestImageConversion(
-							externalExtraction.getBiometrics().get(0).getData(),
-							true, true, true, null);
-					File minutiaeFile = new File(
-							PROCESSED_IMAGES_PATH + File.separator + split[0] + "_Minutiae.png");
-					FileUtils.writeByteArrayToFile(minutiaeFile, imageWithMinutiae);
+					extractTemplateAndGetMinutiaeImage(image, processedImage, split, PROCESSED_IMAGES_PATH);
 				} catch (IOException e) {
 					log.error("Can not read or write image {} from {} - {}", image, imagesDirectory, e.getMessage());
 				} catch (Exception e) {
@@ -173,24 +161,8 @@ class FingerprintPhotoMatcherApplicationTests {
 					log.info("Processing wsq: {}", name);
 					String[] split = name.split("\\.");
 
-					// Extract template from finger and write .json containing Base64, NFIQ and
-					// number of minutiae
-					ExtractRequestVO extractRequestVO = getExtractRequestFromProcessedImage(wsq,
-							FileUtils.readFileToByteArray(wsq));
-					ExtractResponseVO externalExtraction = extractorService
-							.externalExtraction(extractRequestVO);
-					String json = objectMapper.writeValueAsString(externalExtraction);
-					File jsonFile = new File(
-							PROCESSED_WSQS_PATH + File.separator + split[0] + ".json");
-					FileUtils.writeStringToFile(jsonFile, json, StandardCharsets.UTF_8);
-
-					// Get image with minutiaes and write it to a .png with same name format
-					byte[] wsqWithMinutiae = extractorService.requestImageConversion(
-							externalExtraction.getBiometrics().get(0).getData(),
-							true, true, true, null);
-					File minutiaeFile = new File(
-							PROCESSED_WSQS_PATH + File.separator + split[0] + "_Minutiae.png");
-					FileUtils.writeByteArrayToFile(minutiaeFile, wsqWithMinutiae);
+					extractTemplateAndGetMinutiaeImage(wsq, FileUtils.readFileToByteArray(wsq), split,
+							PROCESSED_WSQS_PATH);
 				} catch (IOException e) {
 					log.error("Can not read or write image {} from {} - {}", wsq, wsqsDirectory, e.getMessage());
 				} catch (Exception e) {
@@ -199,6 +171,25 @@ class FingerprintPhotoMatcherApplicationTests {
 				}
 			});
 		}
+	}
+
+	// Extract template from finger and get minutiae image
+	private void extractTemplateAndGetMinutiaeImage(File biometry, byte[] processedBiometry, String[] split,
+			String resultPath) throws IOException, Exception, JsonProcessingException {
+		// Extract template from finger and write .json containing Base64, NFIQ and
+		// number of minutiae
+		ExtractRequestVO extractRequestVO = getExtractRequestFromBiometry(biometry, processedBiometry);
+		ExtractResponseVO externalExtraction = extractorService.externalExtraction(extractRequestVO);
+		String json = objectMapper.writeValueAsString(externalExtraction);
+		File jsonFile = new File(resultPath + File.separator + split[0] + ".json");
+		FileUtils.writeStringToFile(jsonFile, json, StandardCharsets.UTF_8);
+
+		// Get image with minutiaes and write it to a .png with same name format
+		byte[] imageWithMinutiae = extractorService.requestImageConversion(
+				externalExtraction.getBiometrics().get(0).getData(),
+				true, true, true, null);
+		File minutiaeFile = new File(resultPath + File.separator + split[0] + "_Minutiae.png");
+		FileUtils.writeByteArrayToFile(minutiaeFile, imageWithMinutiae);
 	}
 
 	// Get all images on /test/target/processed/images/ and match it with all WSQs
@@ -248,10 +239,10 @@ class FingerprintPhotoMatcherApplicationTests {
 		buildVerifyReport(VERIFY_WSQ_WSQ_PATH, "Verify_WSQ-WSQ_Report");
 	}
 
-	private ExtractRequestVO getExtractRequestFromProcessedImage(File image, byte[] processedImage) {
+	private ExtractRequestVO getExtractRequestFromBiometry(File biometry, byte[] processedBiometry) {
 		List<BiometricVO> biometricVOs = new ArrayList<>();
-		biometricVOs.add(new BiometricVO(translateFingerNames(image.getName()),
-				Base64.getEncoder().encodeToString(processedImage), false));
+		biometricVOs.add(new BiometricVO(translateFingerNames(biometry.getName()),
+				Base64.getEncoder().encodeToString(processedBiometry), false));
 		ExtractRequestVO extractRequestVO = new ExtractRequestVO(biometricVOs, true);
 		return extractRequestVO;
 	}
@@ -406,6 +397,15 @@ class FingerprintPhotoMatcherApplicationTests {
 			double hitPercentageOfNoMatch = 0;
 			double hitPercentageOfMatch = 0;
 			double overallHitPercentage = 0;
+			int amountOfFalseAcceptances = 0;
+			int amountOfFalseRejections = 0;
+			int amountOfTrueAcceptances = 0;
+			int amountOfTrueRejections = 0;
+			double far = 0;
+			double frr = 0;
+			double tar = 0;
+			double trr = 0;
+			double eer = 0;
 
 			int hits = 0;
 			File verifyDirectory = new File(pathOfVerify);
@@ -430,15 +430,36 @@ class FingerprintPhotoMatcherApplicationTests {
 						switch (matchResponse.getExpectedResult()) {
 							case "SUCCESS":
 								expectedMatches++;
+								switch (matchResponse.getResult()) {
+									case SUCCESS:
+										hits++;
+										amountOfTrueAcceptances++;
+										break;
+									case NO_MATCH:
+										amountOfFalseRejections++;
+										break;
+									case FAILURE:
+									default:
+										break;
+								}
 								break;
 							case "NO_MATCH":
 								expectedNoMatches++;
+								switch (matchResponse.getResult()) {
+									case SUCCESS:
+										amountOfFalseAcceptances++;
+										break;
+									case NO_MATCH:
+										hits++;
+										amountOfTrueRejections++;
+										break;
+									case FAILURE:
+									default:
+										break;
+								}
 								break;
 							default:
 								break;
-						}
-						if (matchResponse.getResult().toString().equals(matchResponse.getExpectedResult())) {
-							hits++;
 						}
 					}
 				}
@@ -446,9 +467,16 @@ class FingerprintPhotoMatcherApplicationTests {
 				hitPercentageOfMatch = (double) amountOfMatches / (double) expectedMatches * 100.0;
 				overallHitPercentage = (double) hits / (double) numberOfVerifies * 100.0;
 
+				far = (double) amountOfFalseAcceptances / (double) numberOfVerifies * 100.0;
+				frr = (double) amountOfFalseRejections / (double) numberOfVerifies * 100.0;
+				tar = (double) amountOfTrueAcceptances / (double) expectedMatches * 100.0;
+				trr = (double) amountOfTrueRejections / (double) expectedNoMatches * 100.0;
+				eer = (far + frr) / 2.0;
+
 				VerifyReport verifyReport = new VerifyReport(numberOfVerifies, amountOfNoMatches, expectedNoMatches,
 						hitPercentageOfNoMatch, amountOfMatches, expectedMatches, hitPercentageOfMatch,
-						overallHitPercentage);
+						amountOfFalseAcceptances, amountOfFalseRejections, amountOfTrueAcceptances,
+						amountOfTrueRejections, far, frr, tar, trr, eer, overallHitPercentage);
 
 				String json = objectMapper.writeValueAsString(verifyReport);
 				File jsonFile = new File(REPORTS_PATH + File.separator + reportName + ".json");
