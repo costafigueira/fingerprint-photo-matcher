@@ -48,4 +48,4 @@ Após a execução dos testes os resultados podem ser encontrados em /src/test/t
  
  - result: Pasta contendo todos os testes de match realizado com três subpastas: image-image (match de todos os dedos extraídos de imagens entre si), image-wsq (match de todos os dedos extraídos de imagens com todos os dedos extraídos de WSQs) e wsq-wsq (match de todos os dedos extraídos de WSQs entre si);
  
- - reports: Pasta contendo o relatório dos testes de match com as taxas de FAR, FRR, TAR, FAR e EER obtidas.
+ - reports: Pasta contendo o relatório dos testes de match com as taxas de FAR, FRR, TAR, TRR e EER obtidas.
