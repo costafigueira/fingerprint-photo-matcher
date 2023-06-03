@@ -2,6 +2,7 @@
 	"info": {
 		"_postman_id": "444703b4-5252-49ef-96fa-bbb557f56a22",
 		"name": "Fingerprint Photo Matcher",
+		"description": "API Rest para comunicação com o FPM (Fingerprint Photo Matcher)",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "12517649"
 	},
@@ -13,7 +14,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"image\": \"{{A_1}}\"\r\n}",
+					"raw": "{\r\n    \"image\": \"{{RIGHT_HAND_INDEX-1}}\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -30,7 +31,8 @@
 						"api",
 						"process-image"
 					]
-				}
+				},
+				"description": "Endpoint para processamento de uma imagem com o objetivo de obter uma biometria com mais detalhes e fácil extração e comparação.\n\nRequisição deve conter o Base64 da imagem."
 			},
 			"response": []
 		},
@@ -41,7 +43,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"biometrics\": [\r\n        {\r\n            \"bodyPart\": \"LEFT_HAND_MIDDLE\",\r\n            \"data\": \"{{A_1}}\",\r\n            \"processImage\": true\r\n        }\r\n    ],\r\n    \"evaluateQuality\": \"true\"\r\n}",
+					"raw": "{\r\n    \"biometrics\": [\r\n        {\r\n            \"bodyPart\": \"RIGHT_HAND_INDEX\",\r\n            \"data\": \"{{RIGHT_HAND_INDEX-1}}\",\r\n            \"processImage\": true\r\n        }\r\n    ],\r\n    \"evaluateQuality\": \"true\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -58,7 +60,8 @@
 						"api",
 						"extract-template"
 					]
-				}
+				},
+				"description": "Endpoint para extração de template da biometria informada.\n\nRequisição deve conter a lista de biometrias a serem extraídas, com nome do dedo, base64 e flag de indicação da necessidade de processamento de imagem, não indicada para WSQs. Além da lista deve ser informado uma flag de validação da qualidade da biometria, para obtenção de NFIQ e valores de qualidade."
 			},
 			"response": []
 		},
@@ -86,7 +89,8 @@
 						"api",
 						"verify-templates"
 					]
-				}
+				},
+				"description": "Endpoint para verificação 1:1 entre dois templates em BASE64 retornados pelo endpoint de extração."
 			},
 			"response": []
 		},
@@ -97,7 +101,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"template1\":  {\r\n        \"biometrics\": [\r\n            {\r\n                \"bodyPart\": \"LEFT_HAND_MIDDLE\",\r\n                \"data\": \"{{A_1}}\",\r\n                \"processImage\": true\r\n            }\r\n        ],\r\n        \"evaluateQuality\": \"true\"\r\n    },\r\n    \"template2\":  {\r\n        \"biometrics\": [\r\n            {\r\n                \"bodyPart\": \"LEFT_HAND_MIDDLE\",\r\n                \"data\": \"{{A_2}}\",\r\n                \"processImage\": true\r\n            }\r\n        ],\r\n        \"evaluateQuality\": \"true\"\r\n    }\r\n}",
+					"raw": "{\r\n    \"template1\":  {\r\n        \"biometrics\": [\r\n            {\r\n                \"bodyPart\": \"RIGHT_HAND_INDEX\",\r\n                \"data\": \"{{RIGHT_HAND_INDEX-1}}\",\r\n                \"processImage\": true\r\n            }\r\n        ],\r\n        \"evaluateQuality\": \"true\"\r\n    },\r\n    \"template2\":  {\r\n        \"biometrics\": [\r\n            {\r\n                \"bodyPart\": \"RIGHT_HAND_INDEX\",\r\n                \"data\": \"{{RIGHT_HAND_INDEX-2}}\",\r\n                \"processImage\": true\r\n            }\r\n        ],\r\n        \"evaluateQuality\": \"true\"\r\n    }\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -114,7 +118,8 @@
 						"api",
 						"verify"
 					]
-				}
+				},
+				"description": "Endpoint para verificação 1:1 entre dois templates que necessitam processamento e/ou extração de template das biometrias informadas.\n\nRequisição deve conter dois templates, cada um contendo a lista de biometrias a serem extraídas, com nome do dedo, base64 e flag de indicação da necessidade de processamento de imagem, não indicada para WSQs. Além da lista deve ser informado uma flag de validação da qualidade da biometria, para obtenção de NFIQ e valores de qualidade."
 			},
 			"response": []
 		}
