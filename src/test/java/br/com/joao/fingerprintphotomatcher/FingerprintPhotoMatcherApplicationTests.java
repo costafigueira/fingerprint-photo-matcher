@@ -188,7 +188,7 @@ class FingerprintPhotoMatcherApplicationTests {
 		byte[] imageWithMinutiae = extractorService.requestImageConversion(
 				externalExtraction.getBiometrics().get(0).getData(),
 				true, true, true, null);
-		File minutiaeFile = new File(resultPath + File.separator + split[0] + "_Minutiae.png");
+		File minutiaeFile = new File(resultPath + File.separator + split[0] + "-Minutiae.png");
 		FileUtils.writeByteArrayToFile(minutiaeFile, imageWithMinutiae);
 	}
 
@@ -248,27 +248,27 @@ class FingerprintPhotoMatcherApplicationTests {
 	}
 
 	private BodyPartEnum translateFingerNames(String fingerNameOnPhoto) {
-		String[] split = fingerNameOnPhoto.split("_"); // A_1, A_2, B_1, B_2
+		String[] split = fingerNameOnPhoto.split("-");
 		switch (split[0]) {
-			case "A":
+			case "LEFT_HAND_PINKY":
 				return BodyPartEnum.LEFT_HAND_PINKY;
-			case "B":
+			case "LEFT_HAND_RING":
 				return BodyPartEnum.LEFT_HAND_RING;
-			case "C":
+			case "LEFT_HAND_MIDDLE":
 				return BodyPartEnum.LEFT_HAND_MIDDLE;
-			case "D":
+			case "LEFT_HAND_INDEX":
 				return BodyPartEnum.LEFT_HAND_INDEX;
-			case "E":
+			case "LEFT_HAND_THUMB":
 				return BodyPartEnum.LEFT_HAND_THUMB;
-			case "F":
+			case "RIGHT_HAND_THUMB":
 				return BodyPartEnum.RIGHT_HAND_THUMB;
-			case "G":
+			case "RIGHT_HAND_INDEX":
 				return BodyPartEnum.RIGHT_HAND_INDEX;
-			case "H":
+			case "RIGHT_HAND_MIDDLE":
 				return BodyPartEnum.RIGHT_HAND_MIDDLE;
-			case "I":
+			case "RIGHT_HAND_RING":
 				return BodyPartEnum.RIGHT_HAND_RING;
-			case "J":
+			case "RIGHT_HAND_PINKY":
 				return BodyPartEnum.RIGHT_HAND_PINKY;
 			default:
 				return null;
@@ -320,7 +320,7 @@ class FingerprintPhotoMatcherApplicationTests {
 
 						String json = objectMapper.writeValueAsString(match);
 						File jsonFile = new File(
-								pathToStoreResult + File.separator + template1Name + "-" + template2Name + ".json");
+								pathToStoreResult + File.separator + template1Name + "-Vs-" + template2Name + ".json");
 						FileUtils.writeStringToFile(jsonFile, json, StandardCharsets.UTF_8);
 					} catch (Exception e) {
 						log.error("Can not verify template1: {} with template2: {} - {}", template1Name, template2Name,
@@ -516,7 +516,7 @@ class FingerprintPhotoMatcherApplicationTests {
 					String[] split = name.split("\\.");
 
 					PostmanEnvValueVO postmanEnvValueVO = new PostmanEnvValueVO();
-					postmanEnvValueVO.setKey(split[0] + "_WSQ");
+					postmanEnvValueVO.setKey(split[0] + "-WSQ");
 					postmanEnvValueVO
 							.setValue(Base64.getEncoder().encodeToString(FileUtils.readFileToByteArray(wsq)));
 					values.add(postmanEnvValueVO);
