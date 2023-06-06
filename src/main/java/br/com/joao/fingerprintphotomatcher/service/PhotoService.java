@@ -40,6 +40,7 @@ public class PhotoService {
 		matImage = invertImage(matImage);
 		matImage = applyAdaptiveHistogramEqualization(matImage);
 		matImage = binarizeImage(matImage);
+		matImage = crop(matImage);
 
 		return getByteArrayImageFromMat(matImage);
 	}
@@ -97,6 +98,34 @@ public class PhotoService {
 		Size tileGridSize = new Size(60, 60);
 		Imgproc.createCLAHE(128, tileGridSize).apply(image, claheImage);
 		return claheImage;
+	}
+
+	private Mat zoom(Mat image) {
+		log.info("Zooming image");
+		// Define the zoom factor
+		double zoomFactor = 0.75;
+		// Resize the image
+		Mat zoomedImage = new Mat();
+		Imgproc.resize(image, zoomedImage, new Size(image.width() * zoomFactor, image.height() * zoomFactor));
+		return zoomedImage;
+	}
+
+	private Mat crop(Mat image) {
+		log.info("Cropping image");
+
+		// Define the ROI
+		int roiX = image.width() / 9;
+		int roiY = image.height() / 9;
+		int roiWidth = (int) (image.width() / 1.3);
+		int roiHeight = (int) (image.height() / 1.3);
+
+		// Define the ROI as a Rect object
+		Rect roi = new Rect(roiX, roiY, roiWidth, roiHeight);
+
+		// Crop the image to the ROI
+		Mat croppedImage = new Mat(image, roi);
+
+		return croppedImage;
 	}
 
 	private Mat removeBackground(Mat image) {
